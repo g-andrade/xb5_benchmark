@@ -191,7 +191,7 @@ defmodule Xb5Benchmark.Cases do
   end
 
   defp nr_of_variants() do
-    50
+    20
   end
 
   defp base_cache_path(n, build_type) do
@@ -634,9 +634,38 @@ defmodule Xb5Benchmark.Cases do
           end
         )
 
-      :keys_to_alternate_insert_and_delete ->
+      {:existing_percentiles_to_lookup, method} ->
         expand_n_and_build_types(
           @non_empty_n_values,
+          cache,
+          fn %Variant{} = variant, cache ->
+            expand_existing_percentiles_to_lookup(
+              variant,
+              group.input_amount,
+              method,
+              &new_cases(variant, test_pairs, &1),
+              cache
+            )
+          end
+        )
+
+      :existing_ranks_to_lookup ->
+        expand_n_and_build_types(
+          @non_empty_n_values,
+          cache,
+          fn %Variant{} = variant, cache ->
+            expand_existing_ranks_to_lookup(
+              variant,
+              group.input_amount,
+              &new_cases(variant, test_pairs, &1),
+              cache
+            )
+          end
+        )
+
+      :keys_to_alternate_insert_and_delete ->
+        expand_n_and_build_types(
+          @n_values,
           cache,
           fn %Variant{} = variant, cache ->
             expand_keys_to_alternate_insert_and_delete(
@@ -648,14 +677,15 @@ defmodule Xb5Benchmark.Cases do
           end
         )
 
-      :new_keys_to_insert ->
+      {:new_keys_to_insert, order} ->
         expand_n_and_build_types(
-          @non_empty_n_values,
+          @n_values,
           cache,
           fn %Variant{} = variant, cache ->
             expand_new_keys_to_insert(
               variant,
               group.input_amount,
+              order,
               &new_cases(variant, test_pairs, &1),
               cache
             )
@@ -709,25 +739,100 @@ defmodule Xb5Benchmark.Cases do
 
   ############
 
-  defp expand_new_keys_to_insert(%Variant{} = variant, input_amount, fun, cache) do
+  defp expand_existing_percentiles_to_lookup(%Variant{} = variant, input_amount, method, fun, cache) do
     amount = amount_of_keys(variant, input_amount)
 
     {keys, cache} =
       new_or_cached_input(
         variant,
-        {:new_keys_to_insert, amount},
-        fn -> new_random_new_keys_to_insert(variant.initial_keys, amount) end,
+        {:existing_percentiles_to_lookup, amount},
+        fn -> new_random_existing_percentiles_to_lookup(variant.n, method, amount) end,
         cache
       )
 
     {fun.(keys), cache}
   end
 
-  defp new_random_new_keys_to_insert(initial_keys, amount) do
-    new_keys = new_random_new_keys_to_insert_recur(MapSet.new(initial_keys), amount)
+  defp new_random_existing_percentiles_to_lookup(n, method, amount) do
+    new_random_existing_percentiles_to_lookup_recur(n, method, amount)
+  end
+
+  defp new_random_existing_percentiles_to_lookup_recur(n, method, amount) when amount > 0 do
+    percentile = new_percentile_to_lookup(n, method)
+    [percentile | new_random_existing_percentiles_to_lookup_recur(n, method, amount - 1)]
+  end
+
+  defp new_random_existing_percentiles_to_lookup_recur(_n, _method, 0) do
+    []
+  end
+
+  defp new_percentile_to_lookup(_n, method) when method in [:inclusive, :nearest_rank] do
+    :rand.uniform()
+  end
+
+  ############
+
+  defp expand_existing_ranks_to_lookup(%Variant{} = variant, input_amount, fun, cache) do
+    amount = amount_of_keys(variant, input_amount)
+
+    {keys, cache} =
+      new_or_cached_input(
+        variant,
+        {:existing_ranks_to_lookup, amount},
+        fn -> new_random_existing_ranks_to_lookup(variant.n, amount) end,
+        cache
+      )
+
+    {fun.(keys), cache}
+  end
+
+  defp new_random_existing_ranks_to_lookup(n, amount) do
+    new_random_existing_ranks_to_lookup_recur(n, amount)
+  end
+
+  defp new_random_existing_ranks_to_lookup_recur(n, amount) when amount > 0 do
+    rank = :rand.uniform(n)
+    [rank | new_random_existing_ranks_to_lookup_recur(n, amount - 1)]
+  end
+
+  defp new_random_existing_ranks_to_lookup_recur(_n, 0) do
+    []
+  end
+
+  ############
+
+  defp expand_new_keys_to_insert(%Variant{} = variant, input_amount, order, fun, cache) do
+    amount = amount_of_keys(variant, input_amount)
+
+    {keys, cache} =
+      new_or_cached_input(
+        variant,
+        {:new_keys_to_insert, order, amount},
+        fn -> new_keys_to_insert(variant.initial_keys, amount, order) end,
+        cache
+      )
+
+    {fun.(keys), cache}
+  end
+
+  defp new_keys_to_insert(initial_keys, amount, order) do
+    new_keys = 
+      case order do
+        :random ->
+          new_random_new_keys_to_insert_recur(MapSet.new(initial_keys), amount)
+
+        :asc ->
+          new_ascending_keys_to_insert(initial_keys, amount)
+
+        :desc ->
+          new_descending_keys_to_insert(initial_keys, amount)
+      end
+
     assert new_keys -- initial_keys === new_keys
     new_keys
   end
+
+  ##
 
   defp new_random_new_keys_to_insert_recur(existing_acc, amount) when amount > 0 do
     {new_key, existing_acc} = new_key_to_insert(existing_acc)
@@ -736,6 +841,36 @@ defmodule Xb5Benchmark.Cases do
 
   defp new_random_new_keys_to_insert_recur(_, 0) do
     []
+  end
+
+  ##
+
+  defp new_ascending_keys_to_insert(initial_keys, amount) do
+    first_key =
+      case initial_keys do
+        [] ->
+          1
+
+        _ ->
+          Enum.max(initial_keys) + 1
+      end
+
+    Enum.to_list(first_key..(first_key + amount - 1)//1)
+  end
+
+  ##
+
+  defp new_descending_keys_to_insert(initial_keys, amount) do
+    first_key =
+      case initial_keys do
+        [] ->
+          -1
+
+        _ ->
+          Enum.min(initial_keys) - 1
+      end
+
+    Enum.to_list(first_key..(first_key - amount + 1)//-1)
   end
 
   ############
@@ -766,6 +901,12 @@ defmodule Xb5Benchmark.Cases do
 
       {:max, max} ->
         min(max, variant.n)
+
+      :all ->
+        :all
+
+      :none ->
+        :none
     end
   end
 
@@ -914,6 +1055,17 @@ defmodule Xb5Benchmark.Cases do
       {:max, max} ->
         amount = min(max, n)
         "#{tag}_x#{amount}"
+    end
+  end
+
+  defp test_input_filename({tag, tweak, input_amount}, n) when is_atom(tag) and is_atom(tweak) do
+    case input_amount do
+      amount when is_integer(amount) and amount > 0 ->
+        "#{tag}_#{tweak}_x#{amount}"
+
+      {:max, max} ->
+        amount = min(max, n)
+        "#{tag}_#{tweak}_x#{amount}"
     end
   end
 

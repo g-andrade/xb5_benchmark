@@ -72,6 +72,7 @@ defmodule Xb5Benchmark do
       build_type: build_type,
       impl_mod: impl_mod,
       case_group_id: case_group_id,
+      input_amount: raw_stats_case_group_input_amount(case_group_id),
       measurements: json_measurements
     }
 
@@ -90,35 +91,94 @@ defmodule Xb5Benchmark do
     Map.put(map, :n, n)
   end
 
+  defp raw_stats_case_group_input_amount(case_group_id) do
+    group = %Xb5Benchmark.Groups.Group{} = apply(Xb5Benchmark.Groups, case_group_id, [])
+
+    case group.input_amount do
+      integer when is_integer(integer) ->
+        integer
+
+      {:max, ceiling} when is_integer(ceiling) ->
+        ["max", ceiling]
+
+      input_amount when input_amount in [:all, :none] ->
+        "#{input_amount}"
+    end
+  end
+
   #####
 
   defp merged_stats_rows(%{
     "build_type" => build_type_str, 
     "impl_mod" => impl_mod_str, 
     "case_group_id" => case_group_id_str,
+    "input_amount" => input_amount,
     "measurements" => measurements
   }) do
     rev_measurements = Enum.reverse(measurements)
 
     [
-      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, rev_measurements, "average", "average"),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "average", "average"),
       # Five-number summary
-      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, rev_measurements, "minimum", "minimum"),
-      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, rev_measurements, "25th_percentile", ["percentiles", "25"]),
-      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, rev_measurements, "median", "median"),
-      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, rev_measurements, "75th_percentile", ["percentiles", "75"]),
-      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, rev_measurements, "maximum", "maximum")
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "minimum", "minimum"),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "25th_percentile", ["percentiles", "25"]),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "median", "median"),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "75th_percentile", ["percentiles", "75"]),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "maximum", "maximum")
     ]
   end
 
-  defp merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, rev_measurements, measurement_id, json_path) do
+  defp merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, measurement_id, json_path) do
     [
       {"build_type", build_type_str},
-      {"case_group_id", case_group_id_str},
+      {"case_group_id", merged_stats_case_group_id(case_group_id_str, input_amount)},
       {"measurement_name", measurement_id},
       {"impl_mod", impl_mod_str}
       | Enum.reduce(rev_measurements, [], &merge_measurement(&2, &1, json_path))
     ]
+  end
+
+  defp merged_stats_case_group_id(case_group_id_str, input_amount) do
+    prettier_case_id = prettier_case_id(case_group_id_str)
+
+    case input_amount do
+      integer when is_integer(integer) ->
+        "#{prettier_case_id} x #{integer}"
+
+      ["max", ceiling] when is_integer(ceiling) ->
+        "#{prettier_case_id} x min(N, #{ceiling})"
+
+      _ when input_amount in ["all", "none"] ->
+        "#{prettier_case_id}"
+    end
+  end
+
+  defp prettier_case_id("alternate_insert_and_delete") do
+    "alternate [insert,delete]"
+  end
+
+  defp prettier_case_id("alternate_insert_largest_and_take_smallest") do
+    "alternate [insert largest, take smallest]"
+  end
+
+  defp prettier_case_id("alternate_insert_smallest_and_take_largest") do
+    "alternate [insert smallest, take largest]"
+  end
+
+  defp prettier_case_id(<<"percentile_", suffix::bytes>>) when suffix !== "rank" do
+    "percentile (#{suffix})"
+  end
+
+  defp prettier_case_id(<<"filter_", suffix::bytes>>) when suffix !== "rank" do
+    "filter (#{suffix})"
+  end
+
+  defp prettier_case_id(<<"is_", _::bytes>> = case_group_id) do
+    "#{case_group_id}?"
+  end
+
+  defp prettier_case_id(case_group_id_str) do
+    case_group_id_str
   end
 
   defp merge_measurement(acc, %{"n" => n} = json, path) do

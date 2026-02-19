@@ -17,7 +17,11 @@ defmodule Xb5Benchmark.SetSuite do
       def tests do
         [
           {Groups.alternate_insert_and_delete(), &alternate_put_new_and_delete!/1},
+          {Groups.alternate_insert_smallest_and_take_largest(), &alternate_put_new_and_pop_largest!/1},
+          {Groups.alternate_insert_largest_and_take_smallest(), &alternate_put_new_and_pop_smallest!/1},
           {Groups.delete(), &delete!/1},
+          {Groups.filter_all(), &filter/1},
+          {Groups.filter_none(), &filter/1},
           {Groups.insert(), &put_new!/1},
           {Groups.is_defined(), &member?/1},
           {Groups.take_largest(), &pop_largest!/1},
@@ -43,6 +47,38 @@ defmodule Xb5Benchmark.SetSuite do
 
       #############
 
+      def alternate_put_new_and_pop_largest!([set | keys]) do
+        alternate_put_new_and_pop_largest!(set, keys)
+      end
+
+      defp alternate_put_new_and_pop_largest!(set, [key_to_put | next]) do
+        set = set_put_new!(set, key_to_put)
+        {_, set} = set_pop_largest!(set)
+        alternate_put_new_and_pop_largest!(set, next)
+      end
+
+      defp alternate_put_new_and_pop_largest!(_set, []) do
+        :ok
+      end
+
+      #############
+
+      def alternate_put_new_and_pop_smallest!([set | keys]) do
+        alternate_put_new_and_pop_smallest!(set, keys)
+      end
+
+      defp alternate_put_new_and_pop_smallest!(set, [key_to_put | next]) do
+        set = set_put_new!(set, key_to_put)
+        {_, set} = set_pop_smallest!(set)
+        alternate_put_new_and_pop_smallest!(set, next)
+      end
+
+      defp alternate_put_new_and_pop_smallest!(_set, []) do
+        :ok
+      end
+
+      #############
+
       def delete!([set | keys]) do
         delete_recur!(set, keys)
       end
@@ -54,6 +90,18 @@ defmodule Xb5Benchmark.SetSuite do
 
       defp delete_recur!(_, []) do
         :ok
+      end
+
+      #############
+
+      def filter([set | amount]) do
+        case amount do
+          :all ->
+            _ = set_filter(set, fn _ -> true end)
+
+          :none ->
+            _ = set_filter(set, fn _ -> false end)
+        end
       end
 
       #############

@@ -15,6 +15,11 @@ defmodule Xb5Benchmark.ErlangSet do
         unquote(set_mod).delete(key, set)
       end
 
+      @compile {:inline, set_filter: 2}
+      def set_filter(set, fun) do
+        unquote(set_mod).filter(fun, set)
+      end
+
       defdelegate set_iterator(set), to: unquote(set_mod), as: :iterator
       defdelegate set_largest!(set), to: unquote(set_mod), as: :largest
 

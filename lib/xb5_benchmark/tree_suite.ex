@@ -14,9 +14,33 @@ defmodule Xb5Benchmark.TreeSuite do
 
       def impl_mod, do: unquote(tree_mod)
 
+      # Cases yet to benchmark:
+      # - alternate insert and take
+      # - delete_any [non-existent keys]
+      # - enter [existing keys]
+      # - enter [non-existing keys]
+      # - from_list
+      # - from_orddict
+      # - iterate
+      # - iterate from middle key
+      # - keys
+      # - larger [existing keys]
+      # - larger [non-existing keys]
+      # - largest?
+      # - map
+      # - smaller [existing keys]
+      # - smaller [non-existing keys]
+      # - take_largest (x N)
+      # - take_smallest (x N)
+      # - to_list
+      # - update [existing keys]
+      # - values
+
       def tests do
         [
           {Groups.alternate_insert_and_delete(), &alternate_put_new_and_delete!/1},
+          {Groups.alternate_insert_largest_and_take_smallest(), &alternate_put_new_and_pop_smallest!/1},
+          {Groups.alternate_insert_smallest_and_take_largest(), &alternate_put_new_and_pop_largest!/1},
           {Groups.delete(), &delete!/1},
           {Groups.get(), &fetch!/1},
           {Groups.insert(), &put_new!/1},
@@ -40,6 +64,38 @@ defmodule Xb5Benchmark.TreeSuite do
       end
 
       defp alternate_put_new_and_delete!(_, []) do
+        :ok
+      end
+
+      #############
+
+      def alternate_put_new_and_pop_largest!([tree | keys]) do
+        alternate_put_new_and_pop_largest!(tree, keys)
+      end
+
+      defp alternate_put_new_and_pop_largest!(tree, [key_to_put | next]) do
+        tree = tree_put_new!(tree, key_to_put, :value)
+        {_, _, tree} = tree_pop_largest!(tree)
+        alternate_put_new_and_pop_largest!(tree, next)
+      end
+
+      defp alternate_put_new_and_pop_largest!(_tree, []) do
+        :ok
+      end
+
+      #############
+
+      def alternate_put_new_and_pop_smallest!([tree | keys]) do
+        alternate_put_new_and_pop_smallest!(tree, keys)
+      end
+
+      defp alternate_put_new_and_pop_smallest!(tree, [key_to_put | next]) do
+        tree = tree_put_new!(tree, key_to_put, :value)
+        {_, _, tree} = tree_pop_smallest!(tree)
+        alternate_put_new_and_pop_smallest!(tree, next)
+      end
+
+      defp alternate_put_new_and_pop_smallest!(_tree, []) do
         :ok
       end
 
