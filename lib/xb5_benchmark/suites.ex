@@ -1,37 +1,30 @@
 defmodule Xb5Benchmark.Suites do
-  alias Xb5Benchmark.ErlangBag
-  alias Xb5Benchmark.ErlangSet
-  alias Xb5Benchmark.ErlangTree
-  alias Xb5Benchmark.BagSuite
-  alias Xb5Benchmark.SetSuite
-  alias Xb5Benchmark.TreeSuite
+  alias Xb5Benchmark.CollectionWrappers.ErlangBag
+  alias Xb5Benchmark.CollectionWrappers.ErlangSet
+  alias Xb5Benchmark.CollectionWrappers.ErlangTree
+  alias Xb5Benchmark.Suite
 
-  defmodule ErlGbTree do
-    @moduledoc false
-    use TreeSuite, tree_mod: :gb_trees, wrapper_mod: ErlangTree
-  end
-
-  defmodule ErlXb5Tree do
-    @moduledoc false
-    use TreeSuite, tree_mod: :xb5_trees, wrapper_mod: ErlangTree
-  end
-
-  #######
+  ##
 
   defmodule ErlGbSet do
-    @moduledoc false
-    use SetSuite, set_mod: :gb_sets, wrapper_mod: ErlangSet
+    use Suite, wrapper_mod: ErlangSet, coll_mod: :gb_sets
+  end
+
+  defmodule ErlGbTree do
+    use Suite, wrapper_mod: ErlangTree, coll_mod: :gb_trees
+  end
+
+  ##
+
+  defmodule ErlXb5Bag do
+    use Suite, wrapper_mod: ErlangBag, coll_mod: :xb5_bag
   end
 
   defmodule ErlXb5Set do
-    @moduledoc false
-    use SetSuite, set_mod: :xb5_sets, wrapper_mod: ErlangSet
+    use Suite, wrapper_mod: ErlangSet, coll_mod: :xb5_sets
   end
 
-  ##########
-
-  defmodule ErlXb5Bag do
-    @moduledoc false
-    use BagSuite, bag_mod: :xb5_bag, wrapper_mod: ErlangBag
+  defmodule ErlXb5Tree do
+    use Suite, wrapper_mod: ErlangTree, coll_mod: :xb5_trees
   end
 end

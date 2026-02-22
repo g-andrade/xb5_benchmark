@@ -3,7 +3,7 @@ defmodule Xb5Benchmark.InputStructures do
 
   require Logger
 
-  alias Xb5Benchmark.NewSuites
+  alias Xb5Benchmark.Suites
   alias Xb5Benchmark.Utils
 
   import ExUnit.Assertions
@@ -44,6 +44,8 @@ defmodule Xb5Benchmark.InputStructures do
   def new_key() do
     @min_int_key + :rand.uniform(@max_int_key - @min_int_key + 1) - 1
   end
+
+  def maximal_input_structure_candidates(), do: @maximal_input_structure_candidates
 
   ## Internal
 
@@ -130,11 +132,11 @@ defmodule Xb5Benchmark.InputStructures do
 
   defp all_suites do
     [
-      NewSuites.ErlGbSet,
-      NewSuites.ErlGbTree,
-      NewSuites.ErlXb5Bag,
-      NewSuites.ErlXb5Set,
-      NewSuites.ErlXb5Tree,
+      Suites.ErlGbSet,
+      Suites.ErlGbTree,
+      Suites.ErlXb5Bag,
+      Suites.ErlXb5Set,
+      Suites.ErlXb5Tree,
     ]
   end
 

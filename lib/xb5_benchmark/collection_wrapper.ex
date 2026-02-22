@@ -15,6 +15,7 @@ defmodule Xb5Benchmark.CollectionWrapper do
   @callback coll_filter_none(t) :: t
   #@callback coll_foldl(t) :: t
   #@callback coll_foldr(t) :: t
+  @callback coll_from_list(list) :: t
   @callback coll_get(key, t) :: value
   @callback coll_insert(key, t) :: t
   #@callback coll_intersection(t, t) :: t
@@ -48,6 +49,7 @@ defmodule Xb5Benchmark.CollectionWrapper do
     coll_filter_none: 1,
     # coll_foldl: 1,
     # coll_foldr: 1,
+    coll_from_list: 1,
     coll_get: 2,
     coll_is_disjoint: 2,
     coll_is_equal: 2,

@@ -29,6 +29,9 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangSet do
       end
 
       @impl true
+      defdelegate coll_from_list(element, set), to: unquote(coll_mod), as: :from_list
+
+      @impl true
       defdelegate coll_insert(element, set), to: unquote(coll_mod), as: :insert
 
       @impl true
@@ -87,8 +90,8 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangSet do
       def coll_api_name(:largest), do: ":#{unquote(coll_mod)}.largest/1"
       def coll_api_name(:smaller), do: ":#{unquote(coll_mod)}.smaller/2"
       def coll_api_name(:smallest), do: ":#{unquote(coll_mod)}.smallest/1"
-      def coll_api_name(:take_largest_and_discard), do: ":#{unquote(coll_mod)}.take_largest/1"
-      def coll_api_name(:take_smallest_and_discard), do: ":#{unquote(coll_mod)}.take_smallest/1"
+      def coll_api_name(:take_largest), do: ":#{unquote(coll_mod)}.take_largest/1"
+      def coll_api_name(:take_smallest), do: ":#{unquote(coll_mod)}.take_smallest/1"
       def coll_api_name(:to_list), do: ":#{unquote(coll_mod)}.to_list/1"
     end
   end
