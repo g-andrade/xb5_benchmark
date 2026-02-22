@@ -59,12 +59,6 @@ defmodule Xb5Benchmark.ErlangTree do
       defdelegate tree_smallest!(tree), to: unquote(tree_mod), as: :smallest
       defdelegate tree_to_list(tree), to: unquote(tree_mod), as: :to_list
       defdelegate tree_values(tree), to: unquote(tree_mod), as: :values
-
-      ################
-      ################
-
-      def tree_function_description(:delete!), do: ":#{unquote(tree_mod)}.delete/2"
-      def tree_function_description(:delete), do: ":#{unquote(tree_mod)}.delete_any/2"
     end
   end
 end

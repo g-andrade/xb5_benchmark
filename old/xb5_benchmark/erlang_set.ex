@@ -47,12 +47,6 @@ defmodule Xb5Benchmark.ErlangSet do
 
       defdelegate set_smallest!(set), to: unquote(set_mod), as: :smallest
       defdelegate set_to_list(set), to: unquote(set_mod), as: :to_list
-
-      ################
-      ################
-
-      def set_function_description(:delete!), do: ":#{unquote(set_mod)}.delete/2"
-      def set_function_description(:delete), do: ":#{unquote(set_mod)}.delete_any/2"
     end
   end
 end

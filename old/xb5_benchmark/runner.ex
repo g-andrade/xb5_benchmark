@@ -5,7 +5,6 @@ defmodule Xb5Benchmark.Runner do
   require Logger
 
   alias Xb5Benchmark.Cases
-  alias Xb5Benchmark.Cases.Case
 
   # import ExUnit.Assertions
 
@@ -13,33 +12,73 @@ defmodule Xb5Benchmark.Runner do
 
   @min_measurement_interval_multiplier 20
 
-  # FIXME
-  @recommended_seconds_per_case 15 * 0.07142857142857142
+  @rand_algo :exsp
 
   ## Types
 
   ## API
 
   def run(opts \\ []) do
-    {cases, sampling_group_assignments} = assign_sampling_group_numbers(Cases.get())
-    cases = Enum.shuffle(cases)
+    cache = get_or_init_cache()
 
-    total_cases = length(cases)
-    seconds = opts[:seconds] || (total_cases * @recommended_seconds_per_case)
-    Logger.notice("Running #{total_cases} case(s) for #{pretty_time_left(seconds)}...")
+    Logger.notice("Preparing cases...")
 
+    %{
+      cases: cases,
+      recommended_execution_seconds: recommended_execution_seconds,
+      cache: cache
+    } = Cases.prepare(cache, opts)
+
+    save_cache(cache)
+
+    run_time =
+      case opts[:execution_seconds] do
+        nil ->
+          recommended_execution_seconds
+
+        override ->
+          override
+      end
+
+    ####
+
+    Logger.notice("Running for #{pretty_time_left(run_time)}")
+
+    run(cases, run_time)
+  end
+
+  def run(cases, seconds) do
     duration = ceil(seconds * System.convert_time_unit(1, :second, :native))
 
-    samples_acc = []
+    samples_acc = %{}
     finish_ts = System.monotonic_time() + duration
     min_measurement_interval = min_measurement_interval()
 
-    samples_acc = run_recur(cases, cases, min_measurement_interval, finish_ts, samples_acc)
+    {%{uniform_n: rand_uniform}, rand_s_details} = :rand.seed_s(@rand_algo)
+    rand_s = {@rand_algo, rand_s_details}
 
-    process_samples(samples_acc, sampling_group_assignments)
+    samples_acc = run_recur(cases, rand_uniform, rand_s, min_measurement_interval, finish_ts, samples_acc)
+
+    process_samples(samples_acc)
   end
 
   ## Internal
+
+  defp get_or_init_cache() do
+    case Process.get(__MODULE__.Cache) do
+      nil ->
+        cache = Cases.init_cache()
+        Process.put(__MODULE__.Cache, cache)
+        cache
+
+      cache ->
+        cache
+    end
+  end
+
+  defp save_cache(cache) do
+    Process.put(__MODULE__.Cache, cache)
+  end
 
   defp pretty_time_left(seconds) when seconds >= 86400 do
     "#{floor(seconds / 86400)}d #{pretty_time_left(:math.fmod(seconds, 86400))}"
@@ -61,36 +100,12 @@ defmodule Xb5Benchmark.Runner do
     ""
   end
 
-  defp process_samples(samples_acc, sampling_group_assignments) do
-    rev_sampling_group_assigmments = 
-      Map.new(sampling_group_assignments, fn {number, group_key} -> {group_key, number} end)
-
+  defp process_samples(samples_acc) do
     samples_acc
-    |> group_samples(%{})
-    |> workerpool_map(fn {group_number, samples} ->
-      {group_number, process_sample_group(samples)}
+    |> workerpool_map(fn {id, samples} ->
+      {id, process_sample_group(samples)}
     end)
-    |> Map.new(
-      fn {group_number, processed_group} ->
-        group_key = %{} = Map.fetch!(rev_sampling_group_assigmments, group_number)
-        {group_key, processed_group}
-      end)
-  end
-
-  defp group_samples([sampling_group_number, sample | next], acc) do
-    case Map.get(acc, sampling_group_number) do
-      nil ->
-        acc = Map.put(acc, sampling_group_number, [sample])
-        group_samples(next, acc)
-
-      prev ->
-        acc = %{acc | sampling_group_number => [sample | prev]}
-        group_samples(next, acc)
-    end
-  end
-
-  defp group_samples([], acc) do
-    acc
+    |> Map.new()
   end
 
   defp process_sample_group(samples) do
@@ -102,7 +117,7 @@ defmodule Xb5Benchmark.Runner do
     adjusted =
       Enum.map(
         downsampled,
-        fn [count | duration] ->
+        fn {count, duration, _measurement_ended_ts} ->
           count * native_units_in_1sec / duration
         end
       )
@@ -172,89 +187,35 @@ defmodule Xb5Benchmark.Runner do
       end
   end
 
-  ##
+  defp run_recur(cases, rand_uniform, rand_s, min_measurement_interval, finish_ts, samples_acc) do
+    nr_of_cases = tuple_size(cases)
+    {test_case_pos, rand_s} = rand_uniform.(nr_of_cases, rand_s)
 
-  defp assign_sampling_group_numbers(cases) do
-    assign_sampling_group_numbers_recur(cases, [], %{})
-  end
-
-  defp assign_sampling_group_numbers_recur([%Case{} = c | next], acc, mapped_groups) do
-    group_key = sampling_group_key(c)
-
-    case Map.get(mapped_groups, group_key) do
-      nil ->
-        new_assignment = map_size(mapped_groups)
-        mapped_groups = Map.put(mapped_groups, group_key, new_assignment)
-        acc = [%{c | sampling_group_number: new_assignment} | acc]
-        assign_sampling_group_numbers_recur(next, acc, mapped_groups)
-
-      assignment ->
-        acc = [%{c | sampling_group_number: assignment} | acc]
-        assign_sampling_group_numbers_recur(next, acc, mapped_groups)
-    end
-  end
-
-  defp assign_sampling_group_numbers_recur([], acc, mapped_groups) do
-    {acc, mapped_groups}
-  end
-
-  defp sampling_group_key(%Case{} = c) do
-    %{
-      build_type: c.build_type, 
-      n: c.n, 
-      impl_mod: c.group.impl_mod, 
-      group_id: c.group.id,
-      impl_description: c.group.impl_description,
-      group_type: c.group.type,
-      group_tweaks: c.group.tweaks
-      }
-  end
-
-  ##
-
-  defp run_recur(cases, [current_case | next], min_measurement_interval, finish_ts, samples_acc) do
-    current_case = %Case{} = current_case
-    fun_arg = resolve_case_fun_arg(current_case.fun_arg)
+    test_case = :erlang.element(test_case_pos, cases)
+    {case_id, fun, arg} = test_case
 
     measurement_end_ts = System.monotonic_time() + min_measurement_interval
 
-    [measurement_ended_ts | samples_acc] = run_measurement(
-      current_case.sampling_group_number, current_case.fun, fun_arg, measurement_end_ts, samples_acc
-    )
+    [measurement_ended_ts | sample] = run_measurement(fun, arg, measurement_end_ts)
+
+    samples_acc = accumulate_sample(samples_acc, case_id, sample)
 
     if measurement_ended_ts < finish_ts do
-      run_recur(cases, next, min_measurement_interval, finish_ts, samples_acc)
+      run_recur(cases, rand_uniform, rand_s, min_measurement_interval, finish_ts, samples_acc)
     else
       samples_acc
     end
   end
 
-  defp run_recur(cases, [], min_measurement_interval, finish_ts, samples_acc) do
-    run_recur(cases, cases, min_measurement_interval, finish_ts, samples_acc)
-  end
-
-  ##
-
-  defp resolve_case_fun_arg({:single, arg}) do
-    arg
-  end
-
-  defp resolve_case_fun_arg({:random_pick, tuple}) do
-    pick_pos = :rand.uniform(tuple_size(tuple))
-    :erlang.element(pick_pos, tuple)
-  end
-
-  ##
-
-  defp run_measurement(sampling_group_number, fun, arg, measurement_end_ts, samples_acc) do
+  defp run_measurement(fun, arg, measurement_end_ts) do
     counter = 1
     measurement_start_ts = System.monotonic_time()
 
     [count | measurement_ended_ts] = run_measurement_recur(fun, arg, measurement_end_ts, counter)
     measurement_duration = measurement_ended_ts - measurement_start_ts
 
-    sample = [count | measurement_duration]
-    [measurement_ended_ts, sampling_group_number, sample | samples_acc]
+    sample = {count, measurement_duration, measurement_ended_ts}
+    [measurement_ended_ts | sample]
   end
 
   defp run_measurement_recur(fun, arg, measurement_end_ts, counter) do
@@ -266,6 +227,17 @@ defmodule Xb5Benchmark.Runner do
     else
       [counter | current_ts]
     end
+  end
+
+  @compile {:inline, accumulate_sample: 3}
+  defp accumulate_sample(samples_acc, case_id, sample) do
+    Map.fetch!(samples_acc, case_id)
+  catch
+    :error, {:badkey, k} when k === case_id ->
+      Map.put(samples_acc, case_id, [sample])
+  else
+    prev_id_samples ->
+      %{samples_acc | case_id => [sample | prev_id_samples]}
   end
 
   #########

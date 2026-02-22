@@ -49,16 +49,17 @@ defmodule Xb5Benchmark do
     |> Enum.each(&save_raw_stats_group!(output_dir, name, &1))
   end
 
-  defp raw_stats_group_key({sampling_group_key, _samples}) do
-    Map.delete(sampling_group_key, :n)
+  defp raw_stats_group_key({case_id, _}) do
+    {case_group_id, impl_mod, build_type, _n} = case_id
+    {build_type, impl_mod, case_group_id}
   end
 
-  defp save_raw_stats_group!(output_dir, name, {regrouped_key, grouped}) do 
+  defp save_raw_stats_group!(output_dir, name, {{build_type, impl_mod, case_group_id}, grouped}) do 
     json_measurements =
       grouped
       |> Enum.map(
-        fn {sampling_group_key, stats} -> 
-          %{n: n} = sampling_group_key
+        fn {case_id, stats} -> 
+          {_group_id, _impl_mod, _build_type, n} = case_id
           {n, stats}
         end)
         |> Enum.sort_by(&elem(&1, 0))
@@ -66,22 +67,12 @@ defmodule Xb5Benchmark do
 
     #####
 
-    {sampling_group_key, _} = Enum.at(grouped, 0)
-
-    %{
-      build_type: build_type,
-      impl_mod: impl_mod,
-      group_type: group_type
-    } = sampling_group_key
-
-    #####
-
     json_output = %{
       name: name,
       build_type: build_type,
       impl_mod: impl_mod,
-      group_type: group_type,
-      input_amount: raw_stats_case_group_input_amount(sampling_group_key),
+      case_group_id: case_group_id,
+      input_amount: raw_stats_case_group_input_amount(case_group_id),
       measurements: json_measurements
     }
 
@@ -90,7 +81,7 @@ defmodule Xb5Benchmark do
     group_output_dir = Path.join([output_dir, "build_#{build_type}", "#{impl_mod}", "#{name}"])
     File.mkdir_p!(group_output_dir)
 
-    group_output_path = Path.join(group_output_dir, "#{group_type}.json")
+    group_output_path = Path.join(group_output_dir, "#{case_group_id}.json")
     File.write!(group_output_path, Jason.encode!(json_output, pretty: true))
   end
 
@@ -100,24 +91,18 @@ defmodule Xb5Benchmark do
     Map.put(map, :n, n)
   end
 
-  defp raw_stats_case_group_input_amount(%{group_type: group_type} = sampling_group_key) do
-    # FIXME
+  defp raw_stats_case_group_input_amount(case_group_id) do
+    group = %Xb5Benchmark.Groups.Group{} = apply(Xb5Benchmark.Groups, case_group_id, [])
 
-    case group_type do
-      :delete_all ->
-        1
-        #sampling_group_key.group_multiplier
+    case group.input_amount do
+      integer when is_integer(integer) ->
+        integer
 
-      :delete_any_non_existing ->
-        1
-        #sampling_group_key.group_multiplier
+      {:max, ceiling} when is_integer(ceiling) ->
+        ["max", ceiling]
 
-      :delete_existing ->
-        1
-        #sampling_group_key.group_multiplier
-
-      _ ->
-        1
+      input_amount when input_amount in [:all, :none] ->
+        "#{input_amount}"
     end
   end
 
@@ -126,76 +111,75 @@ defmodule Xb5Benchmark do
   defp merged_stats_rows(%{
     "build_type" => build_type_str, 
     "impl_mod" => impl_mod_str, 
-    "group_type" => group_type_str,
+    "case_group_id" => case_group_id_str,
     "input_amount" => input_amount,
     "measurements" => measurements
   }) do
     rev_measurements = Enum.reverse(measurements)
 
     [
-      merged_stats_row(build_type_str, impl_mod_str, group_type_str, input_amount, rev_measurements, "average", "average"),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "average", "average"),
       # Five-number summary
-      merged_stats_row(build_type_str, impl_mod_str, group_type_str, input_amount, rev_measurements, "minimum", "minimum"),
-      merged_stats_row(build_type_str, impl_mod_str, group_type_str, input_amount, rev_measurements, "25th_percentile", ["percentiles", "25"]),
-      merged_stats_row(build_type_str, impl_mod_str, group_type_str, input_amount, rev_measurements, "median", "median"),
-      merged_stats_row(build_type_str, impl_mod_str, group_type_str, input_amount, rev_measurements, "75th_percentile", ["percentiles", "75"]),
-      merged_stats_row(build_type_str, impl_mod_str, group_type_str, input_amount, rev_measurements, "maximum", "maximum")
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "minimum", "minimum"),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "25th_percentile", ["percentiles", "25"]),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "median", "median"),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "75th_percentile", ["percentiles", "75"]),
+      merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, "maximum", "maximum")
     ]
   end
 
-  defp merged_stats_row(build_type_str, impl_mod_str, group_type_str, _input_amount, rev_measurements, measurement_id, json_path) do
-    # FIXME input_amount
+  defp merged_stats_row(build_type_str, impl_mod_str, case_group_id_str, input_amount, rev_measurements, measurement_id, json_path) do
     [
       {"build_type", build_type_str},
-      {"group_type", group_type_str},
+      {"case_group_id", merged_stats_case_group_id(case_group_id_str, input_amount)},
       {"measurement_name", measurement_id},
       {"impl_mod", impl_mod_str}
       | Enum.reduce(rev_measurements, [], &merge_measurement(&2, &1, json_path))
     ]
   end
 
-  #defp merged_stats_case_group_id(case_group_id_str, input_amount) do
-  #  prettier_case_id = prettier_case_id(case_group_id_str)
+  defp merged_stats_case_group_id(case_group_id_str, input_amount) do
+    prettier_case_id = prettier_case_id(case_group_id_str)
 
-  #  case input_amount do
-  #    integer when is_integer(integer) ->
-  #      "#{prettier_case_id} x #{integer}"
+    case input_amount do
+      integer when is_integer(integer) ->
+        "#{prettier_case_id} x #{integer}"
 
-  #    ["max", ceiling] when is_integer(ceiling) ->
-  #      "#{prettier_case_id} x min(N, #{ceiling})"
+      ["max", ceiling] when is_integer(ceiling) ->
+        "#{prettier_case_id} x min(N, #{ceiling})"
 
-  #    _ when input_amount in ["all", "none"] ->
-  #      "#{prettier_case_id}"
-  #  end
-  #end
+      _ when input_amount in ["all", "none"] ->
+        "#{prettier_case_id}"
+    end
+  end
 
-  #defp prettier_case_id("alternate_insert_and_delete") do
-  #  "alternate [insert,delete]"
-  #end
+  defp prettier_case_id("alternate_insert_and_delete") do
+    "alternate [insert,delete]"
+  end
 
-  #defp prettier_case_id("alternate_insert_largest_and_take_smallest") do
-  #  "alternate [insert largest, take smallest]"
-  #end
+  defp prettier_case_id("alternate_insert_largest_and_take_smallest") do
+    "alternate [insert largest, take smallest]"
+  end
 
-  #defp prettier_case_id("alternate_insert_smallest_and_take_largest") do
-  #  "alternate [insert smallest, take largest]"
-  #end
+  defp prettier_case_id("alternate_insert_smallest_and_take_largest") do
+    "alternate [insert smallest, take largest]"
+  end
 
-  #defp prettier_case_id(<<"percentile_", suffix::bytes>>) when suffix !== "rank" do
-  #  "percentile (#{suffix})"
-  #end
+  defp prettier_case_id(<<"percentile_", suffix::bytes>>) when suffix !== "rank" do
+    "percentile (#{suffix})"
+  end
 
-  #defp prettier_case_id(<<"filter_", suffix::bytes>>) when suffix !== "rank" do
-  #  "filter (#{suffix})"
-  #end
+  defp prettier_case_id(<<"filter_", suffix::bytes>>) when suffix !== "rank" do
+    "filter (#{suffix})"
+  end
 
-  #defp prettier_case_id(<<"is_", _::bytes>> = case_group_id) do
-  #  "#{case_group_id}?"
-  #end
+  defp prettier_case_id(<<"is_", _::bytes>> = case_group_id) do
+    "#{case_group_id}?"
+  end
 
-  #defp prettier_case_id(case_group_id_str) do
-  #  case_group_id_str
-  #end
+  defp prettier_case_id(case_group_id_str) do
+    case_group_id_str
+  end
 
   defp merge_measurement(acc, %{"n" => n} = json, path) do
     [{"#{n}", json_measurement_fetch!(json, path)} | acc]
@@ -218,12 +202,12 @@ defmodule Xb5Benchmark do
   defp merged_stats_row_order(merged_row) do
     {_, build_type_str} = List.keyfind(merged_row, "build_type", 0)
     {_, impl_mod_str} = List.keyfind(merged_row, "impl_mod", 0)
-    {_, group_type_str} = List.keyfind(merged_row, "group_type", 0)
+    {_, case_group_id_str} = List.keyfind(merged_row, "case_group_id", 0)
     {_, measurement_name} = List.keyfind(merged_row, "measurement_name", 0)
 
     [
       build_type_str_order(build_type_str),
-      group_type_str,
+      case_group_id_str,
       measurement_name_order(measurement_name),
       impl_mod_str
     ]
@@ -231,8 +215,7 @@ defmodule Xb5Benchmark do
 
   defp build_type_str_order("sequential"), do: 1
   defp build_type_str_order("random"), do: 2
-  defp build_type_str_order("from_ordset_or_orddict"), do: 3
-  defp build_type_str_order("xb5_adversarial"), do: 4
+  defp build_type_str_order("adversarial"), do: 3
 
   defp measurement_name_order("average"), do: 1
   defp measurement_name_order("minimum"), do: 2
@@ -245,7 +228,6 @@ defmodule Xb5Benchmark do
 
   defp collect_csv_headers(merged_rows) do
     merged_rows
-    |> Enum.sort_by(&(List.keymember?(&1, "0", 0)), :desc)
     |> Enum.reduce(%{}, &collect_row_csv_keys/2)
     |> Enum.sort_by(fn {_key, order} -> order end)
     |> Enum.map(fn {key, _order} -> key end)
