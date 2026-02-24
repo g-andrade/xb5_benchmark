@@ -20,6 +20,9 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangTree do
       defdelegate coll_delete_any(key, tree), to: unquote(coll_mod), as: :delete_any
 
       @impl true
+      defdelegate coll_from_ordset_or_orddict(list), to: unquote(coll_mod), as: :from_orddict
+
+      @impl true
       defdelegate coll_get(key, tree), to: unquote(coll_mod), as: :get
 
       @impl true
@@ -32,6 +35,9 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangTree do
       defdelegate coll_is_member(key, tree), to: unquote(coll_mod), as: :is_defined
 
       @impl true
+      defdelegate coll_iterator(tree), to: unquote(coll_mod), as: :iterator
+
+      @impl true
       defdelegate coll_keys(tree), to: unquote(coll_mod), as: :keys
 
       @impl true
@@ -42,6 +48,24 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangTree do
 
       @impl true
       defdelegate coll_lookup(key, tree), to: unquote(coll_mod), as: :lookup
+
+      @impl true
+      @compile {:inline, coll_map: 1}
+      def coll_map(bag) do
+        unquote(coll_mod).map(&coll_fun_map_identity/2, bag)
+      end
+
+      @impl true
+      @compile {:inline, coll_next_and_discard: 1}
+      def coll_next_and_discard(iterator) do
+        case unquote(coll_mod).next(iterator) do
+          {_, _, iterator} ->
+            iterator
+
+          :none ->
+            :done
+        end
+      end
 
       @impl true
       defdelegate coll_smaller(key, tree), to: unquote(coll_mod), as: :smaller
@@ -100,6 +124,7 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangTree do
       def coll_api_name(:add), do: ":#{unquote(coll_mod)}.enter/3"
       def coll_api_name(:delete), do: ":#{unquote(coll_mod)}.delete/2"
       def coll_api_name(:delete_any), do: ":#{unquote(coll_mod)}.delete_any/2"
+      def coll_api_name(:from_ordset_or_orddict), do: ":#{unquote(coll_mod)}.from_orddict/1"
       def coll_api_name(:get), do: ":#{unquote(coll_mod)}.get/2"
       def coll_api_name(:insert), do: ":#{unquote(coll_mod)}.insert/3"
       def coll_api_name(:is_member), do: ":#{unquote(coll_mod)}.is_defined/2"
@@ -107,6 +132,8 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangTree do
       def coll_api_name(:larger), do: ":#{unquote(coll_mod)}.larger/2"
       def coll_api_name(:largest), do: ":#{unquote(coll_mod)}.largest/1"
       def coll_api_name(:lookup), do: ":#{unquote(coll_mod)}.lookup/2"
+      def coll_api_name(:map), do: ":#{unquote(coll_mod)}.map/2"
+      def coll_api_name(:next), do: "iterate :#{unquote(coll_mod)}"
       def coll_api_name(:smaller), do: ":#{unquote(coll_mod)}.smaller/2"
       def coll_api_name(:smallest), do: ":#{unquote(coll_mod)}.smallest/1"
       def coll_api_name(:take), do: ":#{unquote(coll_mod)}.take/2"
@@ -116,6 +143,10 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangTree do
       def coll_api_name(:to_list), do: ":#{unquote(coll_mod)}.to_list/1"
       def coll_api_name(:update), do: ":#{unquote(coll_mod)}.update/3"
       def coll_api_name(:values), do: ":#{unquote(coll_mod)}.values/1"
+
+      #######
+
+      defp coll_fun_map_identity(_key, value), do: value
     end
   end
 end

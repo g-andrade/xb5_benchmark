@@ -19,7 +19,7 @@ defmodule Xb5Benchmark.Groups do
 
   #####
 
-  def delete_any_missing(suite_fun, impl_mod, impl_description) do
+  def add_new(suite_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_one_key, :missing},
@@ -30,7 +30,43 @@ defmodule Xb5Benchmark.Groups do
       impl_description: impl_description
     }
   end
-
+  
+  def add_new_x100(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_keys, :missing_and_unique, 100},
+      includes_empty?: true,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+  
+  def add_existing(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_one_key, :existing},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: {:duplicate_variants, 4},
+      impl_description: impl_description
+    }
+  end
+  
+  def add_existing_x100(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_keys, :existing_and_unique, 100},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+  
   def delete(suite_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
@@ -43,17 +79,43 @@ defmodule Xb5Benchmark.Groups do
     }
   end
   
-  #  def delete_batch(suite_fun, impl_mod, impl_description) do
-  #    %Group{
-  #      id: elem(__ENV__.function, 0),
-  #      type: :delete,
-  #      includes_empty?: false,
-  #      impl_mod: impl_mod,
-  #      suite_fun: suite_fun,
-  #      tweaks: {:batch_amount, 100},
-  #      impl_description: impl_description
-  #    }
-  #  end
+  def delete_x100(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_keys, :existing_and_unique, 100},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+  
+  def delete_any_missing(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_one_key, :missing},
+      includes_empty?: true,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  def delete_any_missing_x100(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_keys, :missing, 100},
+      includes_empty?: true,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  # TODO difference/2
 
   def filter_all(suite_fun, impl_mod, impl_description) do
     %Group{
@@ -79,17 +141,20 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def from_list(suite_fun, impl_mod, impl_description) do
+  def foldl(suite_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_building_from_list, :shuffled},
-      includes_empty?: false,
+      type: :each_iteration_no_keys,
+      includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
+
+  # TODO from_list
+  # TODO from_orddict/from_ordset
 
   def get(suite_fun, impl_mod, impl_description) do
     %Group{
@@ -131,6 +196,20 @@ defmodule Xb5Benchmark.Groups do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :missing_and_unique, 100},
+      includes_empty?: true,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  # TODO intersection
+
+  def iterate(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -241,9 +320,17 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  # TODO map
-
-  # TODO iterations
+  def map(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: :each_iteration_no_keys,
+      includes_empty?: true,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
 
   # TODO smaller
 

@@ -77,9 +77,6 @@ defmodule Xb5Benchmark.Cases do
   end
 
   defp group_to_cases(%Group{} = group, grouped_structures) do
-    # TODO continue from here, there's a conceptual mismatch regarding tests of `from_list` / `from_ordset` / `from_orddict`:
-    # * if the build is random or adversarial, what does this mean?
-    #
     structures = Map.fetch!(grouped_structures, group.impl_mod)
 
     structures =
@@ -103,55 +100,8 @@ defmodule Xb5Benchmark.Cases do
 
       {:each_iteration_many_keys, key_status, batch_amount} ->
         Enum.map(structures, &new_alternate_case(group, &1, key_status, batch_amount))
-
-      {:each_iteration_building_from_list, key_order} ->
-        Enum.map(structures, &new_alternate_case_building_from_list(group, &1, key_order))
-
     end
   end
-
-  ###
-
-  defp new_alternate_case_building_from_list(%Group{} = group, %InputStructures.Wrapper{} = input_wrapper, key_order) do
-    assert group.tweaks === :none
-
-    fun = group.suite_fun
-
-    existing_keys = Tuple.to_list(input_wrapper.existing_keys_tuple) |> Enum.sort()
-    amount_of_variants = length(input_wrapper.variants)
-    is_impl_kv = group.impl_mod in [:gb_trees, :xb5_trees]
-
-    fun_arg =
-      case {key_order, is_impl_kv} do
-        {:ordered, false} ->
-          copies = Xb5Benchmark.Utils.deep_copy_term_n_times(existing_keys, amount_of_variants - 1)
-          [existing_keys | copies]
-
-        {:ordered, true} ->
-          kvs = Enum.map(existing_keys, &{&1, :initial_value})
-          copies = Xb5Benchmark.Utils.deep_copy_term_n_times(existing_keys, amount_of_variants - 1)
-          [kvs | copies]
-
-        {:shuffled, false} ->
-          Enum.map(1..amount_of_variants//1, fn _ -> Enum.shuffle(existing_keys) end)
-
-        {:shuffled, true} ->
-          kvs = Enum.map(existing_keys, &{&1, :initial_value})
-          Enum.map(1..amount_of_variants//1, fn _ -> Enum.shuffle(kvs) end)
-      end
-
-    ###
-
-    %Case{
-      n: input_wrapper.n,
-      build_type: input_wrapper.build_type,
-      suite: input_wrapper.suite,
-      group: group,
-      fun: fun,
-      fun_arg: fun_arg
-    }
-  end
-
 
   ###
 
@@ -203,7 +153,11 @@ defmodule Xb5Benchmark.Cases do
     case key_status do
       :existing ->
         assert input_wrapper.n !== 0
-        [input_variant, existing_keys_independent(input_wrapper.existing_keys_tuple, batch_amount)]
+        [input_variant, existing_keys(input_wrapper.existing_keys_tuple, batch_amount)]
+
+      :existing_and_unique ->
+        assert input_wrapper.n !== 0
+        [input_variant, existing_keys_unique(input_wrapper.existing_keys_tuple, batch_amount)]
 
       :missing ->
         [input_variant, missing_keys(input_wrapper.existing_keys_set, batch_amount)]
@@ -234,8 +188,12 @@ defmodule Xb5Benchmark.Cases do
 
   ##
 
-  defp existing_keys_independent(existing_keys_tuple, amount) do
+  defp existing_keys(existing_keys_tuple, amount) do
     Enum.map(1..amount//1, fn _ -> existing_key(existing_keys_tuple) end)
+  end
+
+  defp existing_keys_unique(existing_keys_tuple, amount) when amount <= tuple_size(existing_keys_tuple) do
+    existing_keys_tuple |> Tuple.to_list() |> Enum.take_random(amount)
   end
 
   ##
