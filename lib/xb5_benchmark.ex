@@ -93,8 +93,14 @@ defmodule Xb5Benchmark do
     group_output_dir = Path.join([output_dir, "build_#{build_type}", "#{impl_mod}", "#{name}"])
     File.mkdir_p!(group_output_dir)
 
-    group_output_path = Path.join(group_output_dir, "#{group_id}.json")
+    group_output_path = Path.join(group_output_dir, "#{group_output_file_basename(group_id)}.json")
     File.write!(group_output_path, Jason.encode!(json_output, pretty: true))
+  end
+
+  defp group_output_file_basename(group_id) do
+    group_id
+    |> Atom.to_string()
+    |> URI.encode(&URI.char_unreserved?/1)
   end
 
   defp json_raw_stats({n, %{overall: %Statistex{} = stats}}) do
@@ -141,49 +147,6 @@ defmodule Xb5Benchmark do
       | Enum.reduce(rev_measurements, [], &merge_measurement(&2, &1, json_path))
     ]
   end
-
-  #defp merged_stats_case_group_id(case_group_id_str, input_amount) do
-  #  prettier_case_id = prettier_case_id(case_group_id_str)
-
-  #  case input_amount do
-  #    integer when is_integer(integer) ->
-  #      "#{prettier_case_id} x #{integer}"
-
-  #    ["max", ceiling] when is_integer(ceiling) ->
-  #      "#{prettier_case_id} x min(N, #{ceiling})"
-
-  #    _ when input_amount in ["all", "none"] ->
-  #      "#{prettier_case_id}"
-  #  end
-  #end
-
-  #defp prettier_case_id("alternate_insert_and_delete") do
-  #  "alternate [insert,delete]"
-  #end
-
-  #defp prettier_case_id("alternate_insert_largest_and_take_smallest") do
-  #  "alternate [insert largest, take smallest]"
-  #end
-
-  #defp prettier_case_id("alternate_insert_smallest_and_take_largest") do
-  #  "alternate [insert smallest, take largest]"
-  #end
-
-  #defp prettier_case_id(<<"percentile_", suffix::bytes>>) when suffix !== "rank" do
-  #  "percentile (#{suffix})"
-  #end
-
-  #defp prettier_case_id(<<"filter_", suffix::bytes>>) when suffix !== "rank" do
-  #  "filter (#{suffix})"
-  #end
-
-  #defp prettier_case_id(<<"is_", _::bytes>> = case_group_id) do
-  #  "#{case_group_id}?"
-  #end
-
-  #defp prettier_case_id(case_group_id_str) do
-  #  case_group_id_str
-  #end
 
   defp merge_measurement(acc, %{"n" => n} = json, path) do
     [{"#{n}", json_measurement_fetch!(json, path)} | acc]

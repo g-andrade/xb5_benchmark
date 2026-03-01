@@ -104,6 +104,7 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangBag do
       def coll_api_name(:delete_any), do: ":#{unquote(coll_mod)}.delete_any/2"
       def coll_api_name(:filter), do: ":#{unquote(coll_mod)}.filter/2"
       def coll_api_name(:foldl), do: ":#{unquote(coll_mod)}.fold/3"
+      def coll_api_name(:from_list), do: ":#{unquote(coll_mod)}.from_list/1"
       def coll_api_name(:from_ordset_or_orddict), do: ":#{unquote(coll_mod)}.from_ordset/1"
       def coll_api_name(:insert), do: ":#{unquote(coll_mod)}.insert/2"
       def coll_api_name(:is_member), do: ":#{unquote(coll_mod)}.is_member/2"

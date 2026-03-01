@@ -25,7 +25,7 @@ defmodule Xb5Benchmark.MixProject do
       {:statistex, "~> 1.1"},
       {:taskforce, "~> 1.2"},
       {:typed_struct, "~> 0.3"},
-      {:xb5, git: "git@github.com:g-andrade/xb5.git", branch: "main"}
+      {:xb5, git: "https://github.com/g-andrade/xb5.git", branch: "main"}
     ]
   end
 end

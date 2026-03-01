@@ -153,8 +153,29 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  # TODO from_list
-  # TODO from_orddict/from_ordset
+  def from_list(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:bulk_constructor, [:sequential, :random]},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  def from_ordset_or_orddict(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: :"from_ordset / from_orddict",
+      type: {:bulk_constructor, [:sequential]},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: {:duplicate_variants, 10},
+      impl_description: impl_description
+    }
+  end
 
   def get(suite_fun, impl_mod, impl_description) do
     %Group{
@@ -222,26 +243,26 @@ defmodule Xb5Benchmark.Groups do
 
   # TODO is_equal
 
-  def is_member_existing(suite_fun, impl_mod, impl_description) do
+  def is_member_existing_x100(suite_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_one_key, :existing},
+      type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
-      tweaks: {:duplicate_variants, 5},
+      tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def is_member_missing(suite_fun, impl_mod, impl_description) do
+  def is_member_missing_x100(suite_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_one_key, :missing},
+      type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
-      tweaks: {:duplicate_variants, 5},
+      tweaks: :none,
       impl_description: impl_description
     }
   end
@@ -258,7 +279,29 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  ## TODO larger
+  def larger(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_one_key, :existing},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: {:duplicate_variants, 4},
+      impl_description: impl_description
+    }
+  end
+
+  def larger_x100(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_keys, :existing, 100},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
 
   def largest(suite_fun, impl_mod, impl_description) do
     %Group{
@@ -332,7 +375,29 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  # TODO smaller
+  def smaller(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_one_key, :existing},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: {:duplicate_variants, 4},
+      impl_description: impl_description
+    }
+  end
+
+  def smaller_x100(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_keys, :existing, 100},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
 
   def smallest(suite_fun, impl_mod, impl_description) do
     %Group{

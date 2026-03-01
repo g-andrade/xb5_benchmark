@@ -13,6 +13,20 @@ defmodule Xb5Benchmark.Utils do
 ##    height
 ##  end
 
+  def shuffle_with_seed(enum, seed) do
+    with_seed(seed, fn -> Enum.shuffle(enum) end)
+  end
+
+  def rand_uniform_with_seed(n, seed) do
+    with_seed(seed, fn -> :rand.uniform(n) end)
+  end
+
+  def take_random_with_seed(enum, count, seed) do
+    with_seed(seed, fn -> Enum.take_random(enum, count) end)
+  end
+
+  #########
+
   def gb_sets_count({_size, root}) do
     gb_sets_count_recur(root)
   end
@@ -32,6 +46,21 @@ defmodule Xb5Benchmark.Utils do
     after
       10_000 ->
         raise "Timeout"
+    end
+  end
+
+  defp with_seed(seed, fun) do
+    prev_rand_state = :rand.export_seed()
+
+    try do
+      :rand.seed(:exsss, seed)
+      fun.()
+    after
+      if prev_rand_state === :undefined do
+        :rand.seed(:default)
+      else
+        :rand.seed(prev_rand_state)
+      end
     end
   end
 

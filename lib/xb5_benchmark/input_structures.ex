@@ -15,6 +15,8 @@ defmodule Xb5Benchmark.InputStructures do
 
   @maximal_input_structure_candidates 50
 
+  @random_candidates_seed_part1 1855106302
+
   ## Types
 
   defmodule Wrapper do
@@ -43,6 +45,10 @@ defmodule Xb5Benchmark.InputStructures do
 
   def new_key() do
     @min_int_key + :rand.uniform(@max_int_key - @min_int_key + 1) - 1
+  end
+
+  def new_key_with_seed(seed) do
+    @min_int_key + Utils.rand_uniform_with_seed(@max_int_key - @min_int_key + 1, seed) - 1
   end
 
   def maximal_input_structure_candidates(), do: @maximal_input_structure_candidates
@@ -147,9 +153,12 @@ defmodule Xb5Benchmark.InputStructures do
     cache_path = cache_path(n, build_type, impl_mod)
 
     cached_candidates = read_cached_candidates(cache_path, impl_mod)
-    amount_missing = max(0, amount_of_candidates - length(cached_candidates) )
+    amount_cached = length(cached_candidates)
+    amount_missing = max(0, amount_of_candidates - amount_cached)
 
-    new_candidates = workerpool_map(1..amount_missing//1, fn _ -> new_input_structure_candidate(build_type, n, initial_keys, impl_mod) end)
+    new_candidate_ids = Enum.map(1..amount_missing//1, &(amount_cached + &1))
+
+    new_candidates = workerpool_map(new_candidate_ids, &new_input_structure_candidate(build_type, n, initial_keys, impl_mod, &1))
 
     candidates = Enum.slice(cached_candidates ++ new_candidates, 0, amount_of_candidates)
 
@@ -259,29 +268,31 @@ defmodule Xb5Benchmark.InputStructures do
 
   ##
 
-  defp new_input_structure_candidate(:sequential, n, initial_keys, impl_mod) do
+  defp new_input_structure_candidate(:sequential, n, initial_keys, impl_mod, _candidate_id) do
     candidate = Enum.reduce(initial_keys, impl_mod_new(impl_mod), &impl_mod_insert(impl_mod, &1, &2))
     assert impl_mod.size(candidate) === n
     candidate
   end
 
-  defp new_input_structure_candidate(:random, n, initial_keys, impl_mod) do
-    candidate =
-      initial_keys
-      |> Enum.shuffle()
-      |> Enum.reduce(impl_mod_new(impl_mod), &impl_mod_insert(impl_mod, &1, &2))
+  defp new_input_structure_candidate(:random, n, initial_keys, impl_mod, candidate_id) do
+    shuffle_seed = {@random_candidates_seed_part1, n, candidate_id}
+    shuffled_keys = Utils.shuffle_with_seed(initial_keys, shuffle_seed)
+
+    # Logger.notice("[#{n}] [#{impl_mod}] Shuffled keys: #{inspect shuffled_keys}")
+
+    candidate = Enum.reduce(shuffled_keys, impl_mod_new(impl_mod), &impl_mod_insert(impl_mod, &1, &2))
 
     assert impl_mod.size(candidate) === n
     candidate
   end
 
-  defp new_input_structure_candidate(:from_ordset_or_orddict, n, initial_keys, impl_mod) do
+  defp new_input_structure_candidate(:from_ordset_or_orddict, n, initial_keys, impl_mod, _candidate_id) do
     candidate = impl_mod_from_ordset_or_orddict(impl_mod, initial_keys)
     assert impl_mod.size(candidate) === n
     candidate
   end
 
-  defp new_input_structure_candidate(:xb5_adversarial, n, initial_keys, impl_mod) do
+  defp new_input_structure_candidate(:xb5_adversarial, n, initial_keys, impl_mod, _candidate_id) do
     delete_amount = div(n, 4)
 
     # delete every 4th key

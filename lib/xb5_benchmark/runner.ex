@@ -14,14 +14,14 @@ defmodule Xb5Benchmark.Runner do
   @min_measurement_interval_multiplier 20
 
   # FIXME
-  @recommended_seconds_per_case 15 * 0.07142857142857142
+  @recommended_seconds_per_case 3
 
   ## Types
 
   ## API
 
   def run(opts \\ []) do
-    {cases, sampling_group_assignments} = assign_sampling_group_numbers(Cases.get())
+    {cases, sampling_group_assignments} = assign_sampling_group_numbers(Cases.get(opts))
     cases = Enum.shuffle(cases)
 
     total_cases = length(cases)
@@ -156,7 +156,7 @@ defmodule Xb5Benchmark.Runner do
 #    {[], acc}
 #  end
 
-  defp min_measurement_interval do
+  def min_measurement_interval do
     # System.convert_time_unit(50, :millisecond, :native)
     mono_time_source = :erlang.system_info(:os_monotonic_time_source)
 

@@ -120,6 +120,7 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangSet do
       def coll_api_name(:difference), do: ":#{unquote(coll_mod)}.difference/2"
       def coll_api_name(:filter), do: ":#{unquote(coll_mod)}.filter/2"
       def coll_api_name(:foldl), do: ":#{unquote(coll_mod)}.fold/3"
+      def coll_api_name(:from_list), do: ":#{unquote(coll_mod)}.from_list/1"
       def coll_api_name(:from_ordset_or_orddict), do: ":#{unquote(coll_mod)}.from_ordset/1"
       def coll_api_name(:insert), do: ":#{unquote(coll_mod)}.insert/2"
       def coll_api_name(:intersection), do: ":#{unquote(coll_mod)}.intersection/2"
