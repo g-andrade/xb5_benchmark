@@ -24,7 +24,7 @@ defmodule Xb5Benchmark.Cases do
       field(:group, Group.t, enforce: true)
       field(:fun, fun(), enforce: true)
       field(:fun_arg, fun_arg(), enforce: true)
-      field(:sampling_group_number, nil | pos_integer) # Set by runner
+      field(:sampling_group_number, nil | pos_integer) # Set by Runner
     end
 
     @type fun_arg() :: (

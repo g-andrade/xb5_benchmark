@@ -5,6 +5,8 @@ defmodule Xb5Benchmark do
 
   import ExUnit.Assertions
 
+  alias Xb5Benchmark.Cases
+  alias Xb5Benchmark.Groups.Group
   alias Xb5Benchmark.Runner
 
   ####
@@ -12,8 +14,11 @@ defmodule Xb5Benchmark do
   def run(output_dir, opts \\ []) do
     File.mkdir_p!(output_dir)
 
-    final_stats = Runner.run(opts)
-    save_raw_stats!(output_dir, :runtime, final_stats)
+    cases = Cases.get(opts)
+
+    collectors = Runner.run(cases)
+
+    save_raw_stats!(output_dir, :runtime, collectors)
 
     Logger.notice("Merging output into CSV...")
     merge(output_dir, :runtime)
@@ -43,57 +48,42 @@ defmodule Xb5Benchmark do
 
   #####
 
-  defp save_raw_stats!(output_dir, name, final_stats) do
-    final_stats
-    |> Enum.group_by(&raw_stats_group_key/1)
+  defp save_raw_stats!(output_dir, name, collectors) do
+    collectors
     |> Enum.each(&save_raw_stats_group!(output_dir, name, &1))
   end
 
-  defp raw_stats_group_key({sampling_group_key, _samples}) do
-    Map.delete(sampling_group_key, :n)
-  end
+  defp save_raw_stats_group!(output_dir, name, %Runner.Collector{} = collector) do
+    group = %Group{} = collector.group
 
-  defp save_raw_stats_group!(output_dir, name, {_regrouped_key, grouped}) do 
     json_measurements =
-      grouped
+      collector.results_per_n
       |> Enum.map(
-        fn {sampling_group_key, stats} -> 
-          %{n: n} = sampling_group_key
-          {n, stats}
+        fn {n, %Runner.ResultsForSize{} = results_for_size} ->
+          [latest_stats | _] = results_for_size.stats_history
+          {n, latest_stats}
         end)
         |> Enum.sort_by(&elem(&1, 0))
         |> Enum.map(&json_raw_stats/1)
 
     #####
 
-    {sampling_group_key, _} = Enum.at(grouped, 0)
-
-    %{
-      build_type: build_type,
-      impl_mod: impl_mod,
-      group_id: group_id,
-      impl_description: impl_description,
-      group_tweaks: group_tweaks
-    } = sampling_group_key
-
-    #####
-
     json_output = %{
       name: name,
-      build_type: build_type,
-      impl_mod: impl_mod,
-      group_id: group_id,
-      impl_description: impl_description,
-      tweaks: raw_stats_case_group_tweaks(group_tweaks),
+      build_type: collector.build_type,
+      impl_mod: group.impl_mod,
+      group_id: group.id,
+      impl_description: group.impl_description,
+      tweaks: raw_stats_case_group_tweaks(group.tweaks),
       measurements: json_measurements
     }
 
     #####
 
-    group_output_dir = Path.join([output_dir, "build_#{build_type}", "#{impl_mod}", "#{name}"])
+    group_output_dir = Path.join([output_dir, "build_#{collector.build_type}", "#{group.impl_mod}", "#{name}"])
     File.mkdir_p!(group_output_dir)
 
-    group_output_path = Path.join(group_output_dir, "#{group_output_file_basename(group_id)}.json")
+    group_output_path = Path.join(group_output_dir, "#{group_output_file_basename(group.id)}.json")
     File.write!(group_output_path, Jason.encode!(json_output, pretty: true))
   end
 
@@ -103,7 +93,7 @@ defmodule Xb5Benchmark do
     |> URI.encode(&URI.char_unreserved?/1)
   end
 
-  defp json_raw_stats({n, %{overall: %Statistex{} = stats}}) do
+  defp json_raw_stats({n, %Statistex{} = stats}) do
     map = Map.from_struct(stats)
     assert Map.get(map, :n) === nil
     Map.put(map, :n, n)
