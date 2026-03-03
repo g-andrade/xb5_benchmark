@@ -141,6 +141,8 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
+  # TODO filtermap/2
+
   def foldl(suite_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
