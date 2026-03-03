@@ -14,6 +14,9 @@ defmodule Xb5Benchmark.CollectionWrapper do
   @callback coll_difference(t, t) :: t
   @callback coll_filter_all(t) :: t
   @callback coll_filter_none(t) :: t
+  @callback coll_filtermap_all(t) :: t
+  @callback coll_filtermap_all_mapped(t) :: t
+  @callback coll_filtermap_none(t) :: t
   @callback coll_foldl(t) :: t
   @callback coll_from_list(list) :: t
   @callback coll_from_ordset_or_orddict(list) :: t
@@ -48,6 +51,9 @@ defmodule Xb5Benchmark.CollectionWrapper do
     coll_difference: 2,
     coll_filter_all: 1,
     coll_filter_none: 1,
+    coll_filtermap_all: 1,
+    coll_filtermap_all_mapped: 1,
+    coll_filtermap_none: 1,
     coll_foldl: 1,
     coll_from_list: 1,
     coll_get: 2,

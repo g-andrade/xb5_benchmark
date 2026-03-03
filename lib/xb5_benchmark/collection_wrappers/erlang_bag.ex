@@ -29,6 +29,24 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangBag do
       end
 
       @impl true
+      @compile {:inline, coll_filtermap_all: 1}
+      def coll_filtermap_all(bag) do
+        unquote(coll_mod).filtermap(&coll_fun_filter_all/1, bag)
+      end
+
+      @impl true
+      @compile {:inline, coll_filtermap_all_mapped: 1}
+      def coll_filtermap_all_mapped(bag) do
+        unquote(coll_mod).filtermap(&coll_fun_filtermap_all_mapped/1, bag)
+      end
+
+      @impl true
+      @compile {:inline, coll_filtermap_none: 1}
+      def coll_filtermap_none(bag) do
+        unquote(coll_mod).filtermap(&coll_fun_filter_none/1, bag)
+      end
+
+      @impl true
       @compile {:inline, coll_foldl: 1}
       def coll_foldl(bag) do
         unquote(coll_mod).fold(&coll_fun_fold_return_acc/2, :ok, bag)
@@ -103,6 +121,7 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangBag do
       def coll_api_name(:delete), do: ":#{unquote(coll_mod)}.delete/2"
       def coll_api_name(:delete_any), do: ":#{unquote(coll_mod)}.delete_any/2"
       def coll_api_name(:filter), do: ":#{unquote(coll_mod)}.filter/2"
+      def coll_api_name(:filtermap), do: ":#{unquote(coll_mod)}.filtermap/2"
       def coll_api_name(:foldl), do: ":#{unquote(coll_mod)}.fold/3"
       def coll_api_name(:from_list), do: ":#{unquote(coll_mod)}.from_list/1"
       def coll_api_name(:from_ordset_or_orddict), do: ":#{unquote(coll_mod)}.from_ordset/1"
@@ -123,6 +142,8 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangBag do
       defp coll_fun_filter_all(_element), do: true
 
       defp coll_fun_filter_none(_element), do: false
+
+      defp coll_fun_filtermap_all_mapped(element), do: {true, element}
 
       defp coll_fun_fold_return_acc(_element, acc), do: acc
 

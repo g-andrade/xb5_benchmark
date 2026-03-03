@@ -141,7 +141,41 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  # TODO filtermap/2
+  def filtermap_all(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: :each_iteration_no_keys,
+      includes_empty?: true,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  def filtermap_all_mapped(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: :each_iteration_no_keys,
+      includes_empty?: true,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  def filtermap_none(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: :each_iteration_no_keys,
+      includes_empty?: true,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
 
   def foldl(suite_fun, impl_mod, impl_description) do
     %Group{

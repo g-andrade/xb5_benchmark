@@ -139,6 +139,45 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
+      if Module.defines?(__MODULE__, {:coll_filtermap_all, 1}) do
+        def run_each_filtermap_all([coll | next]) do
+          _ = coll_filtermap_all(coll)
+          run_each_filtermap_all(next)
+        end
+
+        def run_each_filtermap_all([]) do
+          :ok
+        end
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:coll_filtermap_all_mapped, 1}) do
+        def run_each_filtermap_all_mapped([coll | next]) do
+          _ = coll_filtermap_all_mapped(coll)
+          run_each_filtermap_all_mapped(next)
+        end
+
+        def run_each_filtermap_all_mapped([]) do
+          :ok
+        end
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:coll_filtermap_none, 1}) do
+        def run_each_filtermap_none([coll | next]) do
+          _ = coll_filtermap_none(coll)
+          run_each_filtermap_none(next)
+        end
+
+        def run_each_filtermap_none([]) do
+          :ok
+        end
+      end
+
+      ####################################################
+
       if Module.defines?(__MODULE__, {:coll_foldl, 1}) do
         def run_each_foldl([coll | next]) do
           _ = coll_foldl(coll)
@@ -586,6 +625,30 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
+      if Module.defines?(__MODULE__, {:run_each_filtermap_all, 1}) do
+        def group_filtermap_all, do: Groups.filtermap_all(&__MODULE__.run_each_filtermap_all/1, impl_mod(), coll_api_name(:filtermap))
+      else
+        def group_filtermap_all, do: nil
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:run_each_filtermap_all_mapped, 1}) do
+        def group_filtermap_all_mapped, do: Groups.filtermap_all_mapped(&__MODULE__.run_each_filtermap_all_mapped/1, impl_mod(), coll_api_name(:filtermap))
+      else
+        def group_filtermap_all_mapped, do: nil
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:run_each_filtermap_none, 1}) do
+        def group_filtermap_none, do: Groups.filtermap_none(&__MODULE__.run_each_filtermap_none/1, impl_mod(), coll_api_name(:filtermap))
+      else
+        def group_filtermap_none, do: nil
+      end
+
+      ####################################################
+
       if Module.defines?(__MODULE__, {:run_each_foldl, 1}) do
         def group_foldl, do: Groups.foldl(&__MODULE__.run_each_foldl/1, impl_mod(), coll_api_name(:foldl))
       else
@@ -692,6 +755,9 @@ defmodule Xb5Benchmark.Suite do
           Groups.delete_any_missing_x100(&__MODULE__.run_each_delete_any_many/1, impl_mod(), coll_api_name(:delete_any)),
           group_filter_all(),
           group_filter_none(),
+          group_filtermap_all(),
+          group_filtermap_all_mapped(),
+          group_filtermap_none(),
           group_foldl(),
           group_from_list(),
           Groups.from_ordset_or_orddict(&__MODULE__.run_each_from_ordsect_or_orddict/1, impl_mod(), coll_api_name(:from_ordset_or_orddict)),
