@@ -111,9 +111,6 @@ defmodule Xb5Benchmark.Cases do
       {:each_iteration_no_keys, arg} ->
         Enum.map(structures, &new_alternate_case(group, &1, {:no_keys, arg}, 0))
 
-      {:each_iteration_one_key, key_status} ->
-        Enum.map(structures, &new_alternate_case(group, &1, key_status, 1))
-
       {:each_iteration_many_keys, key_status, batch_amount} ->
         Enum.map(structures, &new_alternate_case(group, &1, key_status, batch_amount))
     end
@@ -199,22 +196,22 @@ defmodule Xb5Benchmark.Cases do
     [input_variant, arg]
   end
 
-  defp alternate_case_iteration(
-    input_variant, %InputStructures.Wrapper{} = input_wrapper, key_status,
-    batch_amount, common_rand_seed
-  ) when batch_amount === 1
-  do
-    case key_status do
-      :existing ->
-        assert input_wrapper.n !== 0
-        key_index = 0
-        [input_variant, existing_key(input_wrapper.existing_keys_tuple, common_rand_seed, key_index)]
-
-      :missing ->
-        key_index = 0
-        [input_variant, missing_key(input_wrapper.existing_keys_set, common_rand_seed, key_index)]
-    end
-  end
+#  defp alternate_case_iteration(
+#    input_variant, %InputStructures.Wrapper{} = input_wrapper, key_status,
+#    batch_amount, common_rand_seed
+#  ) when batch_amount === 1
+#  do
+#    case key_status do
+#      :existing ->
+#        assert input_wrapper.n !== 0
+#        key_index = 0
+#        [input_variant, existing_key(input_wrapper.existing_keys_tuple, common_rand_seed, key_index)]
+#
+#      :missing ->
+#        key_index = 0
+#        [input_variant, missing_key(input_wrapper.existing_keys_set, common_rand_seed, key_index)]
+#    end
+#  end
 
   defp alternate_case_iteration(
     input_variant, %InputStructures.Wrapper{} = input_wrapper, key_status,

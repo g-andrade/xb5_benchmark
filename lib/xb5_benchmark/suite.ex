@@ -14,17 +14,6 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
-      def run_each_add([coll, key | next]) do
-        _ = coll_add(key, coll)
-        run_each_add(next)
-      end
-
-      def run_each_add([]) do
-        :ok
-      end
-
-      ####################################################
-
       def run_each_add_many([coll, keys | next]) do
         _ = add_many_recur(coll, keys)
         run_each_add_many(next)
@@ -47,17 +36,6 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
-      def run_each_delete([coll, key | next]) do
-        _ = coll_delete(key, coll)
-        run_each_delete(next)
-      end
-
-      def run_each_delete([]) do
-        :ok
-      end
-
-      ####################################################
-
       def run_each_delete_many([coll, keys | next]) do
         _ = delete_many_recur(coll, keys)
         run_each_delete_many(next)
@@ -75,17 +53,6 @@ defmodule Xb5Benchmark.Suite do
       end
 
       defp delete_many_recur(_coll, []) do
-        :ok
-      end
-
-      ####################################################
-
-      def run_each_delete_any([coll, key | next]) do
-        _ = coll_delete_any(key, coll)
-        run_each_delete_any(next)
-      end
-
-      def run_each_delete_any([]) do
         :ok
       end
 
@@ -216,19 +183,6 @@ defmodule Xb5Benchmark.Suite do
       ####################################################
 
       if Module.defines?(__MODULE__, {:coll_get, 2}) do
-        def run_each_get([coll, key | next]) do
-          _ = coll_get(key, coll)
-          run_each_get(next)
-        end
-
-        def run_each_get([]) do
-          :ok
-        end
-      end
-
-      ####################################################
-
-      if Module.defines?(__MODULE__, {:coll_get, 2}) do
         def run_each_get_many([coll, keys | next]) do
           get_many_recur(coll, keys)
           run_each_get_many(next)
@@ -248,17 +202,6 @@ defmodule Xb5Benchmark.Suite do
         defp get_many_recur(_coll, []) do
           :ok
         end
-      end
-
-      ####################################################
-
-      def run_each_insert([coll, key | next]) do
-        _ = coll_insert(key, coll)
-        run_each_insert(next)
-      end
-
-      def run_each_insert([]) do
-        :ok
       end
 
       ####################################################
@@ -344,17 +287,6 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
-      def run_each_larger([coll, key | next]) do
-        _ = coll_larger(key, coll)
-        run_each_larger(next)
-      end
-
-      def run_each_larger([]) do
-        :ok
-      end
-
-      ####################################################
-
       def run_each_larger_many([coll, keys | next]) do
         larger_many_recur(coll, keys)
         run_each_larger_many(next)
@@ -389,19 +321,6 @@ defmodule Xb5Benchmark.Suite do
       ####################################################
 
       if Module.defines?(__MODULE__, {:coll_lookup, 2}) do
-        def run_each_lookup([coll, key | next]) do
-          _ = coll_lookup(key, coll)
-          run_each_lookup(next)
-        end
-
-        def run_each_lookup([]) do
-          :ok
-        end
-      end
-
-      ####################################################
-
-      if Module.defines?(__MODULE__, {:coll_lookup, 2}) do
         def run_each_lookup_many([coll, keys | next]) do
           _ = lookup_many_recur(coll, keys)
           run_each_lookup_many(next)
@@ -431,17 +350,6 @@ defmodule Xb5Benchmark.Suite do
       end
 
       def run_each_map([]) do
-        :ok
-      end
-
-      ####################################################
-
-      def run_each_smaller([coll, key | next]) do
-        _ = coll_smaller(key, coll)
-        run_each_smaller(next)
-      end
-
-      def run_each_smaller([]) do
         :ok
       end
 
@@ -606,19 +514,6 @@ defmodule Xb5Benchmark.Suite do
       ####################################################
 
       if Module.defines?(__MODULE__, {:coll_update, 2}) do
-        def run_each_update([coll, key | next]) do
-          _ = coll_update(key, coll)
-            run_each_update(next)
-        end
-
-        def run_each_update([]) do
-          :ok
-        end
-      end
-
-      ####################################################
-
-      if Module.defines?(__MODULE__, {:coll_update, 2}) do
         def run_each_update_many([coll, keys | next]) do
           _ = update_many_recur(coll, keys)
             run_each_update_many(next)
@@ -713,14 +608,6 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
-      if Module.defines?(__MODULE__, {:run_each_get, 1}) do
-        def group_get, do: Groups.get(&__MODULE__.run_each_get/1, impl_mod(), coll_api_name(:get))
-      else
-        def group_get, do: nil
-      end
-
-      ####################################################
-
       if Module.defines?(__MODULE__, {:run_each_get_many, 1}) do
         def group_get_x100, do: Groups.get_x100(&__MODULE__.run_each_get_many/1, impl_mod(), coll_api_name(:get))
       else
@@ -733,21 +620,6 @@ defmodule Xb5Benchmark.Suite do
         def group_keys, do: Groups.keys(&__MODULE__.run_each_keys/1, impl_mod(), coll_api_name(:keys))
       else
         def group_keys, do: nil
-      end
-
-      ####################################################
-
-      if Module.defines?(__MODULE__, {:run_each_lookup, 1}) do
-        def groups_lookup do
-          [
-            Groups.lookup_existing(&__MODULE__.run_each_lookup/1, impl_mod(), coll_api_name(:lookup)),
-            Groups.lookup_missing(&__MODULE__.run_each_lookup/1, impl_mod(), coll_api_name(:lookup))
-          ]
-        end
-      else
-        def groups_lookup do
-          []
-        end
       end
 
       ####################################################
@@ -783,14 +655,6 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
-      if Module.defines?(__MODULE__, {:run_each_update, 1}) do
-        def group_update, do: Groups.update(&__MODULE__.run_each_update/1, impl_mod(), coll_api_name(:update))
-      else
-        def group_update, do: nil
-      end
-
-      ####################################################
-
       if Module.defines?(__MODULE__, {:run_each_update_many, 1}) do
         def group_update_x100, do: Groups.update_x100(&__MODULE__.run_each_update_many/1, impl_mod(), coll_api_name(:update))
       else
@@ -809,13 +673,9 @@ defmodule Xb5Benchmark.Suite do
 
       def groups() do
         [
-          Groups.add_new(&__MODULE__.run_each_add/1, impl_mod(), coll_api_name(:add)),
           Groups.add_new_x100(&__MODULE__.run_each_add_many/1, impl_mod(), coll_api_name(:add)),
-          Groups.add_existing(&__MODULE__.run_each_add/1, impl_mod(), coll_api_name(:add)),
           Groups.add_existing_x100(&__MODULE__.run_each_add_many/1, impl_mod(), coll_api_name(:add)),
-          Groups.delete(&__MODULE__.run_each_delete/1, impl_mod(), coll_api_name(:delete)),
           Groups.delete_x100(&__MODULE__.run_each_delete_many/1, impl_mod(), coll_api_name(:delete)),
-          Groups.delete_any_missing(&__MODULE__.run_each_delete_any/1, impl_mod(), coll_api_name(:delete_any)),
           Groups.delete_any_missing_x100(&__MODULE__.run_each_delete_any_many/1, impl_mod(), coll_api_name(:delete_any)),
           group_filter_all(),
           group_filter_none(),
@@ -825,21 +685,16 @@ defmodule Xb5Benchmark.Suite do
           group_foldl(),
           group_from_list(),
           Groups.from_ordset_or_orddict(&__MODULE__.run_each_from_ordsect_or_orddict/1, impl_mod(), coll_api_name(:from_ordset_or_orddict)),
-          group_get(),
           group_get_x100(),
-          Groups.insert(&__MODULE__.run_each_insert/1, impl_mod(), coll_api_name(:insert)),
           Groups.insert_x100(&__MODULE__.run_each_insert_many/1, impl_mod(), coll_api_name(:insert)),
           Groups.iterate(&__MODULE__.run_each_iterate/1, impl_mod(), coll_api_name(:next)),
           Groups.is_member_existing_x100(&__MODULE__.run_each_is_member_many/1, impl_mod(), coll_api_name(:is_member)),
           Groups.is_member_missing_x100(&__MODULE__.run_each_is_member_many/1, impl_mod(), coll_api_name(:is_member)),
           group_keys(),
-          Groups.larger(&__MODULE__.run_each_larger/1, impl_mod(), coll_api_name(:larger)),
           Groups.larger_x100(&__MODULE__.run_each_larger_many/1, impl_mod(), coll_api_name(:larger)),
           Groups.largest(&__MODULE__.run_each_largest/1, impl_mod(), coll_api_name(:largest)),
-          groups_lookup(),
           groups_lookup_many(),
           Groups.map(&__MODULE__.run_each_map/1, impl_mod(), coll_api_name(:map)),
-          Groups.smaller(&__MODULE__.run_each_smaller/1, impl_mod(), coll_api_name(:smaller)),
           Groups.smaller_x100(&__MODULE__.run_each_smaller_many/1, impl_mod(), coll_api_name(:smaller)),
           Groups.smallest(&__MODULE__.run_each_smallest/1, impl_mod(), coll_api_name(:smallest)),
           group_take_x100(),
@@ -849,7 +704,6 @@ defmodule Xb5Benchmark.Suite do
           Groups.take_smallest(&__MODULE__.run_each_take_smallest/1, impl_mod(), coll_api_name(:take_smallest)),
           Groups.take_smallest_x100(&__MODULE__.run_each_take_smallest_many/1, impl_mod(), coll_api_name(:take_smallest)),
           Groups.to_list(&__MODULE__.run_each_to_list/1, impl_mod(), coll_api_name(:to_list)),
-          group_update(),
           group_update_x100(),
           group_values()
         ]
