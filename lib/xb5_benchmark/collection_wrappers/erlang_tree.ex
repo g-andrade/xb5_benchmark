@@ -83,7 +83,7 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangTree do
       @impl true
       @compile {:inline, coll_take_any_and_discard: 2}
       def coll_take_any_and_discard(key, tree) do
-        case unquote(coll_mod).take(key, tree) do
+        case unquote(coll_mod).take_any(key, tree) do
           {_value, tree} ->
             tree
 

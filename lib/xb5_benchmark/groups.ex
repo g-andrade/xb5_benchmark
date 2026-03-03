@@ -447,8 +447,29 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  # TODO take_and_discard
-  # TODO take_any_and_discard
+  def take_x100(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_keys, :existing_and_unique, 100},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  def take_any_missing_x100(suite_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_keys, :missing, 100},
+      includes_empty?: true,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
 
   def take_largest(suite_fun, impl_mod, impl_description) do
     %Group{

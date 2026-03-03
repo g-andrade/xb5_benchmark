@@ -480,6 +480,54 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
+      if Module.defines?(__MODULE__, {:coll_take_and_discard, 2}) do
+        def run_each_take_many([coll, keys | next]) do
+          _ = take_recur(coll, keys)
+          run_each_take_many(next)
+        end
+
+        def run_each_take_many([]) do
+          :ok
+        end
+
+        ##
+
+        defp take_recur(coll, [key | keys]) do
+          coll = coll_take_and_discard(key, coll)
+          take_recur(coll, keys)
+        end
+
+        defp take_recur(_coll, []) do
+          :ok
+        end
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:coll_take_any_and_discard, 2}) do
+        def run_each_take_any_many([coll, keys | next]) do
+          _ = take_any_recur(coll, keys)
+          run_each_take_any_many(next)
+        end
+
+        def run_each_take_any_many([]) do
+          :ok
+        end
+
+        ##
+
+        defp take_any_recur(coll, [key | keys]) do
+          coll = coll_take_any_and_discard(key, coll)
+          take_any_recur(coll, keys)
+        end
+
+        defp take_any_recur(_coll, []) do
+          :ok
+        end
+      end
+
+      ####################################################
+
       def run_each_take_largest([coll | next]) do
         _ = coll_take_largest_and_discard(coll)
         run_each_take_largest(next)
@@ -719,6 +767,22 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
+      if Module.defines?(__MODULE__, {:run_each_take_many, 1}) do
+        def group_take_x100, do: Groups.take_x100(&__MODULE__.run_each_take_many/1, impl_mod(), coll_api_name(:take))
+      else
+        def group_take_x100, do: nil
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:run_each_take_any_many, 1}) do
+        def group_take_any_missing_x100, do: Groups.take_any_missing_x100(&__MODULE__.run_each_take_any_many/1, impl_mod(), coll_api_name(:take_any))
+      else
+        def group_take_any_missing_x100, do: nil
+      end
+
+      ####################################################
+
       if Module.defines?(__MODULE__, {:run_each_update, 1}) do
         def group_update, do: Groups.update(&__MODULE__.run_each_update/1, impl_mod(), coll_api_name(:update))
       else
@@ -778,6 +842,8 @@ defmodule Xb5Benchmark.Suite do
           Groups.smaller(&__MODULE__.run_each_smaller/1, impl_mod(), coll_api_name(:smaller)),
           Groups.smaller_x100(&__MODULE__.run_each_smaller_many/1, impl_mod(), coll_api_name(:smaller)),
           Groups.smallest(&__MODULE__.run_each_smallest/1, impl_mod(), coll_api_name(:smallest)),
+          group_take_x100(),
+          group_take_any_missing_x100(),
           Groups.take_largest(&__MODULE__.run_each_take_largest/1, impl_mod(), coll_api_name(:take_largest)),
           Groups.take_largest_x100(&__MODULE__.run_each_take_largest_many/1, impl_mod(), coll_api_name(:take_largest)),
           Groups.take_smallest(&__MODULE__.run_each_take_smallest/1, impl_mod(), coll_api_name(:take_smallest)),
