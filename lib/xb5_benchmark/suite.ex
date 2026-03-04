@@ -80,6 +80,19 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
+      if Module.defines?(__MODULE__, {:coll_difference, 2}) do
+        def run_each_difference([coll1, coll2 | next]) do
+          _ = coll_difference(coll1, coll2)
+          run_each_difference(next)
+        end
+
+        def run_each_difference([]) do
+          :ok
+        end
+      end
+
+      ####################################################
+
       if Module.defines?(__MODULE__, {:coll_filter_all, 1}) do
         def run_each_filter_all([coll | next]) do
           _ = coll_filter_all(coll)
@@ -228,25 +241,40 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
-      def run_each_iterate([coll | next]) do
-        iterator = coll_iterator(coll)
-        _ = iterate_recur(iterator)
-        run_each_iterate(next)
+      if Module.defines?(__MODULE__, {:coll_intersection, 2}) do
+        def run_each_intersection([coll1, coll2 | next]) do
+          _ = coll_intersection(coll1, coll2)
+          run_each_intersection(next)
+        end
+
+        def run_each_intersection([]) do
+          :ok
+        end
       end
 
-      def run_each_iterate([]) do
-        :ok
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:coll_is_disjoint, 2}) do
+        def run_each_is_disjoint([coll1, coll2 | next]) do
+          _ = coll_is_disjoint(coll1, coll2)
+          run_each_is_disjoint(next)
+        end
+
+        def run_each_is_disjoint([]) do
+          :ok
+        end
       end
 
-      ##
+      ####################################################
 
-      defp iterate_recur(iterator) do
-        case coll_next_and_discard(iterator) do
-          :done ->
-            :ok
+      if Module.defines?(__MODULE__, {:coll_is_equal, 2}) do
+        def run_each_is_equal([coll1, coll2 | next]) do
+          _ = coll_is_equal(coll1, coll2)
+          run_each_is_equal(next)
+        end
 
-          iterator ->
-            iterate_recur(iterator)
+        def run_each_is_equal([]) do
+          :ok
         end
       end
 
@@ -270,6 +298,43 @@ defmodule Xb5Benchmark.Suite do
 
       defp is_member_recur(_coll, []) do
         :ok
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:coll_is_subset, 2}) do
+        def run_each_is_subset([coll1, coll2 | next]) do
+          _ = coll_is_subset(coll1, coll2)
+          run_each_is_subset(next)
+        end
+
+        def run_each_is_subset([]) do
+          :ok
+        end
+      end
+
+      ####################################################
+
+      def run_each_iterate([coll | next]) do
+        iterator = coll_iterator(coll)
+        _ = iterate_recur(iterator)
+        run_each_iterate(next)
+      end
+
+      def run_each_iterate([]) do
+        :ok
+      end
+
+      ##
+
+      defp iterate_recur(iterator) do
+        case coll_next_and_discard(iterator) do
+          :done ->
+            :ok
+
+          iterator ->
+            iterate_recur(iterator)
+        end
       end
 
       ####################################################
@@ -513,6 +578,19 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
+      if Module.defines?(__MODULE__, {:coll_union, 2}) do
+        def run_each_union([coll1, coll2 | next]) do
+          _ = coll_union(coll1, coll2)
+          run_each_union(next)
+        end
+
+        def run_each_union([]) do
+          :ok
+        end
+      end
+
+      ####################################################
+
       if Module.defines?(__MODULE__, {:coll_update, 2}) do
         def run_each_update_many([coll, keys | next]) do
           _ = update_many_recur(coll, keys)
@@ -550,6 +628,16 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
       ####################################################
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:run_each_difference, 1}) do
+        def groups_difference do 
+          Groups.difference(&__MODULE__.run_each_difference/1, impl_mod(), coll_api_name(:difference))
+        end
+      else
+        def groups_difference, do: []
+      end
+
       ####################################################
 
       if Module.defines?(__MODULE__, {:run_each_filter_all, 1}) do
@@ -616,6 +704,46 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
+      if Module.defines?(__MODULE__, {:run_each_intersection, 1}) do
+        def groups_intersection do 
+          Groups.intersection(&__MODULE__.run_each_intersection/1, impl_mod(), coll_api_name(:intersection))
+        end
+      else
+        def groups_intersection, do: []
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:run_each_is_disjoint, 1}) do
+        def groups_is_disjoint do 
+          Groups.is_disjoint(&__MODULE__.run_each_is_disjoint/1, impl_mod(), coll_api_name(:is_disjoint))
+        end
+      else
+        def groups_is_disjoint, do: []
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:run_each_is_equal, 1}) do
+        def groups_is_equal do 
+          Groups.is_equal(&__MODULE__.run_each_is_equal/1, impl_mod(), coll_api_name(:is_equal))
+        end
+      else
+        def groups_is_equal, do: []
+      end
+
+      ####################################################
+
+      if Module.defines?(__MODULE__, {:run_each_is_subset, 1}) do
+        def groups_is_subset do 
+          Groups.is_subset(&__MODULE__.run_each_is_subset/1, impl_mod(), coll_api_name(:is_subset))
+        end
+      else
+        def groups_is_subset, do: []
+      end
+
+      ####################################################
+
       if Module.defines?(__MODULE__, {:run_each_keys, 1}) do
         def group_keys, do: Groups.keys(&__MODULE__.run_each_keys/1, impl_mod(), coll_api_name(:keys))
       else
@@ -655,6 +783,16 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
+      if Module.defines?(__MODULE__, {:run_each_union, 1}) do
+        def groups_union do 
+          Groups.union(&__MODULE__.run_each_union/1, impl_mod(), coll_api_name(:union))
+        end
+      else
+        def groups_union, do: []
+      end
+
+      ####################################################
+
       if Module.defines?(__MODULE__, {:run_each_update_many, 1}) do
         def group_update_x100, do: Groups.update_x100(&__MODULE__.run_each_update_many/1, impl_mod(), coll_api_name(:update))
       else
@@ -677,6 +815,7 @@ defmodule Xb5Benchmark.Suite do
           Groups.add_existing_x100(&__MODULE__.run_each_add_many/1, impl_mod(), coll_api_name(:add)),
           Groups.delete_x100(&__MODULE__.run_each_delete_many/1, impl_mod(), coll_api_name(:delete)),
           Groups.delete_any_missing_x100(&__MODULE__.run_each_delete_any_many/1, impl_mod(), coll_api_name(:delete_any)),
+          groups_difference(),
           group_filter_all(),
           group_filter_none(),
           group_filtermap_all(),
@@ -687,9 +826,13 @@ defmodule Xb5Benchmark.Suite do
           Groups.from_ordset_or_orddict(&__MODULE__.run_each_from_ordsect_or_orddict/1, impl_mod(), coll_api_name(:from_ordset_or_orddict)),
           group_get_x100(),
           Groups.insert_x100(&__MODULE__.run_each_insert_many/1, impl_mod(), coll_api_name(:insert)),
+          groups_intersection(),
           Groups.iterate(&__MODULE__.run_each_iterate/1, impl_mod(), coll_api_name(:next)),
+          groups_is_disjoint(),
+          groups_is_equal(),
           Groups.is_member_existing_x100(&__MODULE__.run_each_is_member_many/1, impl_mod(), coll_api_name(:is_member)),
           Groups.is_member_missing_x100(&__MODULE__.run_each_is_member_many/1, impl_mod(), coll_api_name(:is_member)),
+          groups_is_subset(),
           group_keys(),
           Groups.larger_x100(&__MODULE__.run_each_larger_many/1, impl_mod(), coll_api_name(:larger)),
           Groups.largest(&__MODULE__.run_each_largest/1, impl_mod(), coll_api_name(:largest)),
@@ -704,6 +847,7 @@ defmodule Xb5Benchmark.Suite do
           Groups.take_smallest(&__MODULE__.run_each_take_smallest/1, impl_mod(), coll_api_name(:take_smallest)),
           Groups.take_smallest_x100(&__MODULE__.run_each_take_smallest_many/1, impl_mod(), coll_api_name(:take_smallest)),
           Groups.to_list(&__MODULE__.run_each_to_list/1, impl_mod(), coll_api_name(:to_list)),
+          groups_union(),
           group_update_x100(),
           group_values()
         ]

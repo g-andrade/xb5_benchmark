@@ -15,7 +15,8 @@ defmodule Xb5Benchmark.Runner do
 
   @min_stable_count_per_stats 4
 
-  @batch_interval_seconds 120
+  # FIXME 60
+  @batch_interval_seconds 5
 
   ## Types
 
@@ -60,6 +61,8 @@ defmodule Xb5Benchmark.Runner do
   ## API
 
   def run(cases) do
+    Enum.each(:erlang.processes(), &:erlang.garbage_collect/1)
+
     collectors = new_collectors(cases)
 
     {cases, sampling_numbers_map} = assign_sampling_group_numbers(1, cases, collectors, [], %{})
@@ -257,7 +260,7 @@ defmodule Xb5Benchmark.Runner do
   end
 
   defp stats(processed_samples) do
-    stats = Statistex.statistics(processed_samples)
+    stats = Statistex.statistics(processed_samples, exclude_outliers: true)
     %{stats | frequency_distribution: :removed, outliers: :removed}
   end
 

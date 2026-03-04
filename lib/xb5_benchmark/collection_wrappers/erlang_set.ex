@@ -77,6 +77,9 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangSet do
       defdelegate coll_is_member(element, set), to: unquote(coll_mod), as: :is_member
 
       @impl true
+      defdelegate coll_is_subset(element, set), to: unquote(coll_mod), as: :is_subset
+
+      @impl true
       defdelegate coll_iterator(set), to: unquote(coll_mod), as: :iterator
 
       @impl true
@@ -146,6 +149,7 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangSet do
       def coll_api_name(:is_disjoint), do: ":#{unquote(coll_mod)}.is_disjoint/2"
       def coll_api_name(:is_equal), do: ":#{unquote(coll_mod)}.is_equal/2"
       def coll_api_name(:is_member), do: ":#{unquote(coll_mod)}.is_member/2"
+      def coll_api_name(:is_subset), do: ":#{unquote(coll_mod)}.is_subset/2"
       def coll_api_name(:iterator), do: ":#{unquote(coll_mod)}.iterator/1"
       def coll_api_name(:larger), do: ":#{unquote(coll_mod)}.larger/2"
       def coll_api_name(:largest), do: ":#{unquote(coll_mod)}.largest/1"
@@ -156,6 +160,7 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangSet do
       def coll_api_name(:take_largest), do: ":#{unquote(coll_mod)}.take_largest/1"
       def coll_api_name(:take_smallest), do: ":#{unquote(coll_mod)}.take_smallest/1"
       def coll_api_name(:to_list), do: ":#{unquote(coll_mod)}.to_list/1"
+      def coll_api_name(:union), do: ":#{unquote(coll_mod)}.union/2"
 
       #######
 

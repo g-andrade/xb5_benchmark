@@ -35,24 +35,31 @@ defmodule Xb5Benchmark.Cases do
 
   ## API
 
-  def get(opts \\ []) do
-    Logger.notice("Preparing cases...")
-    input_structures = get_input_structures(opts)
+  def get(build_type, opts \\ []) do
+    Logger.notice("Preparing cases for build_type #{inspect build_type}...")
+    input_structures = get_input_structures(build_type, opts)
     grouped_structures = Enum.group_by(input_structures, &(&1.impl_mod))
     cases = get_cases(grouped_structures, opts)
     :erlang.garbage_collect(self())
     cases
   end
 
+  def clear_cache(build_type, opts) do
+    max_n = opts[:max_n] || @target_max_n
+    cache_key = cache_key(build_type, max_n)
+    Process.delete(cache_key)
+    :ok
+  end
+
   ## Internal
 
-  defp get_input_structures(opts) do
-    cache_key = {__MODULE__, :input_structures}
+  defp get_input_structures(build_type, opts) do
+    max_n = opts[:max_n] || @target_max_n
+    cache_key = cache_key(build_type, max_n)
 
     case Process.get(cache_key) do
       nil ->
-        max_n = opts[:max_n] || @target_max_n
-        input_structures = InputStructures.generate(max_n)
+        input_structures = InputStructures.generate(build_type, max_n)
         Process.put(cache_key, input_structures)
         input_structures
 
@@ -61,14 +68,25 @@ defmodule Xb5Benchmark.Cases do
     end
   end
 
+  defp cache_key(build_type, max_n) do
+    {__MODULE__, :input_structures, build_type, max_n}
+  end
+
   defp get_cases(grouped_structures, opts) do
-    group_ids_to_filter = opts[:groups]
+    keywords_to_filter = opts[:keywords]
 
     groups = get_groups()
 
     groups =
-      if group_ids_to_filter !== nil do
-        Enum.filter(groups, &(&1.id in group_ids_to_filter))
+      if keywords_to_filter !== nil do
+        Enum.filter(
+          groups, 
+          fn %Group{} = group ->
+            (
+              group.id in keywords_to_filter
+              or Enum.any?(group.keywords, &(&1 in keywords_to_filter))
+            )
+          end)
       else
         groups
       end
@@ -113,19 +131,45 @@ defmodule Xb5Benchmark.Cases do
 
       {:each_iteration_many_keys, key_status, batch_amount} ->
         Enum.map(structures, &new_alternate_case(group, &1, key_status, batch_amount))
+
+      {:each_iteration_a_second_collection, max_perc_in_common, size2} ->
+        Enum.map(structures, &new_second_collection_case(group, &1, max_perc_in_common, size2))
     end
   end
 
   ###
 
   defp new_bulk_constructor_case(%Group{} = group, %InputStructures.Wrapper{} = input_wrapper) do
-    impl_mod = input_wrapper.impl_mod
+    assert group.tweaks === :none
 
-    # FIXME missing tweaks
-    # FIXME we need to shuffle the input variants when build type is random
+    rand_seed_part1 = :erlang.phash2(group.id)
+
+    existing_keys_list = input_wrapper.existing_keys_list
+    amount_of_variants = length(input_wrapper.variants)
+
+    sorted_input_list =
+      if String.contains?(group.impl_description, "from_orddict") do
+        Enum.map(existing_keys_list, &({&1, :value}))
+      else
+        existing_keys_list
+      end
+
+    iterations =
+      case input_wrapper.build_type do
+        :sequential ->
+          copies = Utils.deep_copy_term_n_times(sorted_input_list, amount_of_variants - 1)
+          [sorted_input_list | copies]
+
+        :random ->
+          Enum.map(
+            0..(amount_of_variants - 1)//1,
+            fn iteration_index ->
+              Utils.shuffle_with_seed(sorted_input_list, {rand_seed_part1, iteration_index, 637})
+            end)
+      end
 
     fun = group.suite_fun
-    fun_arg = {:single, Enum.map(input_wrapper.variants, &impl_mod.to_list/1)}
+    fun_arg = {:single, iterations}
 
     %Case{
       n: input_wrapper.n,
@@ -147,7 +191,6 @@ defmodule Xb5Benchmark.Cases do
     fun_arg =
       case group.tweaks do
         {:duplicate_variants, multiplier} ->
-          # FIXME copy duplicate variants?
           expanded_variants = Enum.flat_map(1..multiplier//1, fn _ -> input_wrapper.variants end)
 
           iterations = 
@@ -312,5 +355,115 @@ defmodule Xb5Benchmark.Cases do
 
   defp missing_keys_unique_recur(_existing_keys_set, _, _, 0) do
     []
+  end
+
+  #########
+
+  defp new_second_collection_case(
+    %Group{} = group, %InputStructures.Wrapper{} = input_wrapper, max_perc_in_common, size2
+  ) do
+    assert group.tweaks === :none
+
+    fun = group.suite_fun
+
+    rand_seed_part1 = :erlang.phash2(group.id)
+
+    iterations =
+      Enum.with_index(
+        input_wrapper.variants,
+        fn variant, iteration_index ->
+          common_rand_seed = [rand_seed_part1 | iteration_index]
+          second_collection_iteration(variant, input_wrapper, max_perc_in_common, size2, common_rand_seed)
+        end)
+        |> Enum.flat_map(&(&1))
+
+    fun_arg = {:single, iterations}
+
+    %Case{
+      n: input_wrapper.n,
+      build_type: input_wrapper.build_type,
+      suite: input_wrapper.suite,
+      group: group,
+      fun: fun,
+      fun_arg: fun_arg
+    }
+  end
+
+  defp second_collection_iteration(
+    variant, %InputStructures.Wrapper{} = input_wrapper, max_perc_in_common, size2, common_rand_seed
+  ) do
+    impl_mod = input_wrapper.impl_mod
+
+    {resolved_max_perc_in_common, common_keys_direction} = second_collection_resolve_max_perc_in_common(max_perc_in_common)
+    resolved_size2 = second_collection_resolve_size2(input_wrapper.n, size2)
+
+    amount_in_common = floor(resolved_max_perc_in_common * min(resolved_size2, input_wrapper.n))
+    {new_keys_constraint, keys_in_common} = second_collection_keys_in_common(
+      input_wrapper, common_keys_direction, amount_in_common, common_rand_seed
+    )
+
+    coll2 = InputStructures.new_second_collection(
+      input_wrapper.build_type, resolved_size2, impl_mod, input_wrapper.existing_keys_set, 
+      new_keys_constraint, keys_in_common, common_rand_seed
+    )
+    assert impl_mod.size(coll2) === resolved_size2
+    [variant, coll2]
+  end
+
+  ##
+
+  defp second_collection_resolve_max_perc_in_common({percentage, direction}) do
+    {percentage, direction}
+  end
+
+  defp second_collection_resolve_max_perc_in_common(percentage) do
+    {percentage, :random_keys}
+  end
+
+  ##
+
+  defp second_collection_resolve_size2(n, :same_size), do: n
+  defp second_collection_resolve_size2(_n, size2), do: size2
+
+  defp second_collection_keys_in_common(
+    %InputStructures.Wrapper{} = input_wrapper, common_keys_direction, amount_in_common, [seed_part1 | seed_part2]
+  ) do
+    case common_keys_direction do
+      :random_keys ->
+        new_keys_constraint = :none
+        {
+          new_keys_constraint,
+          Utils.take_random_with_seed(input_wrapper.existing_keys_list, amount_in_common, {seed_part1, seed_part2, 42})
+        }
+
+      #####
+
+      :smallest_keys ->
+        keys_in_common = Enum.take(input_wrapper.existing_keys_list, amount_in_common)
+
+        new_keys_constraint =
+          if keys_in_common === [] do
+            :none
+          else
+            {:larger_than, List.last(keys_in_common)}
+          end
+
+        {new_keys_constraint, keys_in_common}
+
+      #####
+
+      :largest_keys ->
+        keys_in_common = Enum.drop(input_wrapper.existing_keys_list, amount_in_common)
+
+        new_keys_constraint =
+          if keys_in_common === [] do
+            :none
+          else
+            {:smaller_than, hd(keys_in_common)}
+          end
+
+        {new_keys_constraint, keys_in_common}
+
+    end
   end
 end

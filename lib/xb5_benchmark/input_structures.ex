@@ -10,8 +10,14 @@ defmodule Xb5Benchmark.InputStructures do
 
   ## Constants
 
-  @min_int_key -Bitwise.<<<(1, 24)
-  @max_int_key Bitwise.<<<(1, 24) - 1
+  #@min_int_key -Bitwise.<<<(1, 24)
+  #@max_int_key Bitwise.<<<(1, 24) - 1
+
+  @min_int_key -Bitwise.<<<(1, 59)
+  @max_int_key Bitwise.<<<(1, 59) - 1
+
+  assert :erts_debug.size(@min_int_key) === 0
+  assert :erts_debug.size(@max_int_key) === 0
 
   @maximal_input_structure_candidates 50
 
@@ -27,17 +33,27 @@ defmodule Xb5Benchmark.InputStructures do
       field(:impl_mod, module, enforce: true)
       field(:existing_keys_tuple, tuple(), enforce: true)
       field(:existing_keys_set, MapSet.t(term()), enforce: true)
+      field(:existing_keys_list, [term()], enforce: true)
       field(:variants, [term, ...], enforce: true)
     end
   end
 
   ## API
 
-  def generate(target_max_n) do
+  def all_build_types() do
+    [
+      :sequential,
+      :random,
+      :from_ordset_or_orddict,
+      :xb5_adversarial
+    ]
+  end
+
+  def generate(build_type, target_max_n) do
     wrappers =
       target_max_n
       |> n_sequence()
-      |> Enum.reduce([], &accumulate_new_n/2)
+      |> Enum.reduce([], &accumulate_new_n(&1, build_type, &2))
 
     :erlang.garbage_collect()
     wrappers
@@ -47,11 +63,53 @@ defmodule Xb5Benchmark.InputStructures do
     @min_int_key + :rand.uniform(@max_int_key - @min_int_key + 1) - 1
   end
 
-  def new_key_with_seed(seed) do
+  def new_key_with_seed(seed, constraint \\ :none)
+
+  def new_key_with_seed(seed, :none) do
     @min_int_key + Utils.rand_uniform_with_seed(@max_int_key - @min_int_key + 1, seed) - 1
   end
 
+  def new_key_with_seed(seed, {:larger_than, ceil}) do
+    ceil + Utils.rand_uniform_with_seed(@max_int_key - ceil, seed)
+  end
+
+  def new_key_with_seed(seed, {:smaller_than, ceil}) do
+    @min_int_key + Utils.rand_uniform_with_seed(ceil - @min_int_key, seed) - 1
+  end
+
   def maximal_input_structure_candidates(), do: @maximal_input_structure_candidates
+
+  def new_second_collection(
+    build_type, size, impl_mod, existing_keys, 
+    new_keys_constraint, keys_in_common, common_rand_seed
+  ) do
+    [seed_part1 | seed_part2] = common_rand_seed
+
+    new_amount = size - length(keys_in_common)
+    assert new_amount >= 0
+
+    new_keys = seeded_new_keys_to_insert(existing_keys, new_keys_constraint, new_amount, seed_part1, seed_part2)
+    initial_keys = Enum.sort(keys_in_common ++ new_keys)
+    assert length(initial_keys) === size
+
+    _ = 
+      case new_keys_constraint do
+        :none ->
+          :ok
+
+        {:larger_than, ceil} ->
+          assert Enum.filter(new_keys, &(&1 <= ceil)) === []
+
+        {:smaller_than, floor} ->
+          assert Enum.filter(new_keys, &(&1 >= floor)) === []
+      end
+
+    # This will make any `random` builds have initial keys in the same way for
+    # all iterations sharing `common_rand_seed`. This should be fine.
+    pseudo_candidate_id = -1
+
+    new_input_structure_candidate(build_type, size, initial_keys, impl_mod, pseudo_candidate_id)
+  end
 
   ## Internal
 
@@ -80,18 +138,15 @@ defmodule Xb5Benchmark.InputStructures do
     end
   end
 
-  defp accumulate_new_n(n, acc) do
+  defp accumulate_new_n(n, build_type, acc) do
     Logger.notice("[n #{n}]")
 
-    for build_type <- all_build_types(), reduce: acc do
-      acc ->
-        initial_keys_amount = initial_keys_amount(n, build_type)
-        initial_keys = new_keys_to_insert(MapSet.new(), [], initial_keys_amount) |> Enum.sort()
+    initial_keys_amount = initial_keys_amount(n, build_type)
+    initial_keys = new_keys_to_insert(MapSet.new(), [], initial_keys_amount) |> Enum.sort()
 
-        for suite <- all_suites(), reduce: acc do
-          acc ->
-            accumulate_new_input_structure(n, build_type, initial_keys, suite, acc)
-        end
+    for suite <- all_suites(), reduce: acc do
+      acc ->
+      accumulate_new_input_structure(n, build_type, initial_keys, suite, acc)
     end
   end
 
@@ -126,15 +181,35 @@ defmodule Xb5Benchmark.InputStructures do
 
   ##
 
-  defp all_build_types() do
-    [
-      # FIXME
-      :sequential,
-      #:random,
-      #:from_ordset_or_orddict,
-      #:xb5_adversarial
-    ]
+  defp seeded_new_keys_to_insert(existing_keys, constraint, amount, seed_part1, seed_part2) do
+    acc = []
+    seeded_new_keys_to_insert_recur(existing_keys, constraint, acc, seed_part1, seed_part2, 0, amount)
   end
+
+  defp seeded_new_keys_to_insert_recur(
+    existing_keys, constraint, acc, seed_part1, seed_part2, seed_part3, amount
+  ) when amount > 0 do
+    new_key = new_key_with_seed({seed_part1, seed_part2, seed_part3}, constraint)
+
+    if MapSet.member?(existing_keys, new_key) do
+      # Logger.notice("CONFLICT")
+      seeded_new_keys_to_insert_recur(
+        existing_keys, constraint, acc, seed_part1, seed_part2, seed_part3 + 1, amount
+      )
+    else
+      existing_keys = MapSet.put(existing_keys, new_key)
+      acc = [new_key | acc]
+      seeded_new_keys_to_insert_recur(
+        existing_keys, constraint, acc, seed_part1, seed_part2, seed_part3 + 1, amount - 1
+      )
+    end
+  end
+
+  defp seeded_new_keys_to_insert_recur(_, _, acc, _, _, _, 0) do
+    acc
+  end
+
+  ##
 
   defp all_suites do
     [
@@ -190,6 +265,7 @@ defmodule Xb5Benchmark.InputStructures do
       impl_mod: impl_mod,
       existing_keys_tuple: existing_keys_tuple,
       existing_keys_set: existing_keys_set,
+      existing_keys_list: existing_keys,
       variants: variants
     }
 

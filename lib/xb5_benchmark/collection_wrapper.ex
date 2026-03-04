@@ -26,6 +26,7 @@ defmodule Xb5Benchmark.CollectionWrapper do
   @callback coll_is_disjoint(t, t) :: boolean
   @callback coll_is_equal(t, t) :: boolean
   @callback coll_is_member(key, t) :: boolean
+  @callback coll_is_subset(t, t) :: boolean
   @callback coll_iterator(t) :: iterator
   @callback coll_keys(t) :: [key]
   @callback coll_larger(key, t) :: term
@@ -60,6 +61,7 @@ defmodule Xb5Benchmark.CollectionWrapper do
     coll_intersection: 2,
     coll_is_disjoint: 2,
     coll_is_equal: 2,
+    coll_is_subset: 2,
     coll_keys: 1,
     coll_lookup: 2,
     coll_take_and_discard: 2,

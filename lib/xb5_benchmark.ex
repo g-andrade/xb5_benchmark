@@ -7,18 +7,27 @@ defmodule Xb5Benchmark do
 
   alias Xb5Benchmark.Cases
   alias Xb5Benchmark.Groups.Group
+  alias Xb5Benchmark.InputStructures
   alias Xb5Benchmark.Runner
+
+  ####
 
   ####
 
   def run(output_dir, opts \\ []) do
     File.mkdir_p!(output_dir)
 
-    cases = Cases.get(opts)
+    build_types = opts[:build_types] || InputStructures.all_build_types()
 
-    collectors = Runner.run(cases)
+    for build_type <- build_types do
+      cases = Cases.get(build_type, opts)
 
-    save_raw_stats!(output_dir, :runtime, collectors)
+      collectors = Runner.run(cases)
+
+      save_raw_stats!(output_dir, :runtime, collectors)
+
+      Cases.clear_cache(cases, opts)
+    end
 
     Logger.notice("Merging output into CSV...")
     merge(output_dir, :runtime)

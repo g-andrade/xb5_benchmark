@@ -6,6 +6,7 @@ defmodule Xb5Benchmark.Groups do
     @moduledoc false
     typedstruct do
       field(:id, atom, enforce: true)
+      field(:keywords, [atom], default: [])
       field(:type, term, enforce: true)
       field(:includes_empty?, boolean, enforce: true)
       field(:impl_mod, module, enforce: true)
@@ -16,6 +17,13 @@ defmodule Xb5Benchmark.Groups do
   end
 
   @type run_structure :: :alternate_one_variant_one_key
+
+  #####
+
+  @set_op_max_percentages_in_common [0.0, 0.5, 1.0]
+  @set_op_sizes [50, 100, 500, 1000]
+
+  @set_op_params for max_percentage_in_common <- @set_op_max_percentages_in_common, size2 <- @set_op_sizes, do: {max_percentage_in_common, size2}
 
   #####
 
@@ -67,7 +75,22 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  # TODO difference/2
+  def difference(suite_fun, impl_mod, impl_description) do
+    Enum.map(
+      @set_op_params,
+      fn {max_percentage_in_common, size2} ->
+        %Group{
+          id: set_op_group_name(:difference, max_percentage_in_common, size2),
+          keywords: [:difference],
+          type: {:each_iteration_a_second_collection, max_percentage_in_common, size2},
+          includes_empty?: true,
+          impl_mod: impl_mod,
+          suite_fun: suite_fun,
+          tweaks: :none,
+          impl_description: impl_description
+        }
+      end)
+  end
 
   def filter_all(suite_fun, impl_mod, impl_description) do
     %Group{
@@ -160,7 +183,7 @@ defmodule Xb5Benchmark.Groups do
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
-      tweaks: {:duplicate_variants, 10},
+      tweaks: :none,
       impl_description: impl_description
     }
   end
@@ -189,7 +212,22 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  # TODO intersection
+  def intersection(suite_fun, impl_mod, impl_description) do
+    Enum.map(
+      @set_op_params,
+      fn {max_percentage_in_common, size2} ->
+        %Group{
+          id: set_op_group_name(:intersection, max_percentage_in_common, size2),
+          keywords: [:intersection],
+          type: {:each_iteration_a_second_collection, max_percentage_in_common, size2},
+          includes_empty?: true,
+          impl_mod: impl_mod,
+          suite_fun: suite_fun,
+          tweaks: :none,
+          impl_description: impl_description
+        }
+      end)
+  end
 
   def iterate(suite_fun, impl_mod, impl_description) do
     %Group{
@@ -203,9 +241,51 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  # TODO is_disjoint
+  def is_disjoint(suite_fun, impl_mod, impl_description) do
+    Enum.map(
+      @set_op_params,
+      fn {max_percentage_in_common, size2} ->
+        %Group{
+          id: set_op_group_name(:is_disjoint, max_percentage_in_common, size2),
+          keywords: [:is_disjoint],
+          type: {:each_iteration_a_second_collection, max_percentage_in_common, size2},
+          includes_empty?: true,
+          impl_mod: impl_mod,
+          suite_fun: suite_fun,
+          tweaks: :none,
+          impl_description: impl_description
+        }
+      end)
+  end
 
-  # TODO is_equal
+  def is_equal(suite_fun, impl_mod, impl_description) do
+    Enum.map(
+      [0.0, 0.5, 1.0],
+      fn percentage_in_common ->
+        id =
+          case percentage_in_common do
+            +0.0 ->
+              :"is_equal [no shared keys]"
+
+            0.5 ->
+              :"is_equal [50% smallest keys are equal]"
+
+            1.0 ->
+              :"is_equal [same keys]"
+          end
+
+        %Group{
+          id: id,
+          keywords: [:is_equal],
+          type: {:each_iteration_a_second_collection, {percentage_in_common, :smallest_keys}, :same_size},
+          includes_empty?: true,
+          impl_mod: impl_mod,
+          suite_fun: suite_fun,
+          tweaks: :none,
+          impl_description: impl_description
+        }
+      end)
+  end
 
   def is_member_existing_x100(suite_fun, impl_mod, impl_description) do
     %Group{
@@ -229,6 +309,35 @@ defmodule Xb5Benchmark.Groups do
       tweaks: :none,
       impl_description: impl_description
     }
+  end
+
+  def is_subset(suite_fun, impl_mod, impl_description) do
+    Enum.map(
+      [0.0, 0.5, 1.0],
+      fn percentage_in_common ->
+        id =
+          case percentage_in_common do
+            +0.0 ->
+              :"is_subset [no shared keys]"
+
+            0.5 ->
+              :"is_subset [50% largest keys are equal]"
+
+            1.0 ->
+              :"is_subset [same keys]"
+          end
+
+        %Group{
+          id: id,
+          keywords: [:is_subset],
+          type: {:each_iteration_a_second_collection, {percentage_in_common, :largest_keys}, :same_size},
+          includes_empty?: true,
+          impl_mod: impl_mod,
+          suite_fun: suite_fun,
+          tweaks: :none,
+          impl_description: impl_description
+        }
+      end)
   end
 
   def keys(suite_fun, impl_mod, impl_description) do
@@ -411,7 +520,22 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  # TODO union
+  def union(suite_fun, impl_mod, impl_description) do
+    Enum.map(
+      @set_op_params,
+      fn {max_percentage_in_common, size2} ->
+        %Group{
+          id: set_op_group_name(:union, max_percentage_in_common, size2),
+          keywords: [:union],
+          type: {:each_iteration_a_second_collection, max_percentage_in_common, size2},
+          includes_empty?: true,
+          impl_mod: impl_mod,
+          suite_fun: suite_fun,
+          tweaks: :none,
+          impl_description: impl_description
+        }
+      end)
+  end
 
   def update_x100(suite_fun, impl_mod, impl_description) do
     %Group{
@@ -435,5 +559,18 @@ defmodule Xb5Benchmark.Groups do
       tweaks: :none,
       impl_description: impl_description
     }
+  end
+
+  ##########
+
+#  defp set_op_group_name(base_name, percentage_in_common) do
+#    percentage_str = String.pad_leading("#{trunc(percentage_in_common * 100)}", 3, "0")
+#    String.to_atom("#{base_name}_#{percentage_str}")
+#  end
+
+  defp set_op_group_name(base_name, max_percentage_in_common, size2) do
+    percentage_str = String.pad_leading("#{trunc(max_percentage_in_common * 100)}", 3, "0")
+    size_str = String.pad_leading("#{size2}", 4, "0")
+    String.to_atom("#{base_name}_#{percentage_str}_#{size_str}")
   end
 end
