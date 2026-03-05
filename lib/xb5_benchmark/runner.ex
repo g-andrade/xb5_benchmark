@@ -71,9 +71,10 @@ defmodule Xb5Benchmark.Runner do
     Enum.each(:erlang.processes(), &:erlang.garbage_collect/1)
 
     Logger.notice("Collecting memory stats...")
-    cases = Utils.workerpool_map(cases, &collect_memory_stats/1)
+    cases = Enum.map(cases, &collect_memory_stats/1)
     Enum.each(:erlang.processes(), &:erlang.garbage_collect/1)
 
+    Logger.notice("Instantiating collectors...")
     collectors = new_collectors(cases)
 
     {cases, sampling_numbers_map} = assign_sampling_group_numbers(1, cases, collectors, [], %{})
