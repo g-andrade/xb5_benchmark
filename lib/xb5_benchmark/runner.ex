@@ -7,7 +7,7 @@ defmodule Xb5Benchmark.Runner do
   alias Xb5Benchmark.Cases.Case
   alias Xb5Benchmark.Groups.Group
 
-  # import ExUnit.Assertions
+  import ExUnit.Assertions
 
   ## Constants
 
@@ -15,7 +15,9 @@ defmodule Xb5Benchmark.Runner do
 
   @min_stable_count_per_stats 4
 
-  @batch_interval_seconds 120
+  @batch_interval_seconds 60
+
+  @min_seconds_before_marking_as_stable 600
 
   ## Types
 
@@ -31,6 +33,7 @@ defmodule Xb5Benchmark.Runner do
       field(:run_list, [Case.t(), ...], enforce: true)
       field(:convergence_count, non_neg_integer, enforce: true)
       field(:convergence_limit, pos_integer, enforce: true)
+      field(:start_ts, integer, enforce: true)
     end
   end
 
@@ -38,6 +41,8 @@ defmodule Xb5Benchmark.Runner do
     typedstruct do
       field(:build_type, atom, enforce: true)
       field(:group, Group.t(), enforce: true)
+      field(:convergence_limit, pos_integer, enforce: true)
+      field(:stable?, boolean, enforce: true)
 
       field(
         :results_per_n,
@@ -104,7 +109,8 @@ defmodule Xb5Benchmark.Runner do
       run_list_amount_of_reshuffles: run_list_amount_of_reshuffles,
       run_list: run_list(cases, run_list_amount_of_reshuffles),
       convergence_count: 0,
-      convergence_limit: convergence_limit(collectors)
+      convergence_limit: convergence_limit(collectors),
+      start_ts: System.monotonic_time()
     }
 
     :erlang.garbage_collect()
@@ -175,7 +181,9 @@ defmodule Xb5Benchmark.Runner do
       collector = %Collector{
         build_type: example_case.build_type,
         group: example_case.group,
-        results_per_n: results_per_n
+        results_per_n: results_per_n,
+        convergence_limit: @min_stable_count_per_stats * map_size(results_per_n),
+        stable?: false
       }
 
       {collector_key, collector}
@@ -212,7 +220,7 @@ defmodule Xb5Benchmark.Runner do
       collectors,
       0,
       fn {_collector_key, %Collector{} = collector}, acc ->
-        acc + @min_stable_count_per_stats * map_size(collector.results_per_n)
+        acc + collector.convergence_limit
       end
     )
   end
@@ -247,9 +255,17 @@ defmodule Xb5Benchmark.Runner do
       run_recur(state.run_list, state.run_list, state.min_measurement_interval, stop_ts, [])
 
     Logger.notice("Collecting batch samples...")
-    grouped_batch_samples = group_batch_samples(batch_samples, state.sampling_numbers_map, %{})
+
+    grouped_batch_samples =
+      group_batch_samples(state.collectors, batch_samples, state.sampling_numbers_map, %{})
+
     collectors = collect_batch_samples(state.collectors, grouped_batch_samples)
-    state = %{state | collectors: collectors}
+
+    state = %{
+      state
+      | collectors:
+          mark_newly_stable_collectors(collectors, state.start_ts, System.monotonic_time())
+    }
 
     convergence_count = convergence_count(state.collectors)
     state = %{state | convergence_count: convergence_count}
@@ -266,13 +282,19 @@ defmodule Xb5Benchmark.Runner do
     end
   end
 
-  defp group_batch_samples([case_nr, sample | next], sampling_numbers_map, acc) do
+  defp group_batch_samples(collectors, [case_nr, sample | next], sampling_numbers_map, acc) do
     {collector_key, n} = Map.fetch!(sampling_numbers_map, case_nr)
 
     case Map.get(acc, collector_key) do
       nil ->
-        acc = Map.put(acc, collector_key, %{n => [sample]})
-        group_batch_samples(next, sampling_numbers_map, acc)
+        case Map.fetch!(collectors, collector_key) do
+          %Collector{stable?: false} ->
+            acc = Map.put(acc, collector_key, %{n => [sample]})
+            group_batch_samples(collectors, next, sampling_numbers_map, acc)
+
+          %Collector{stable?: true} ->
+            group_batch_samples(collectors, next, sampling_numbers_map, acc)
+        end
 
       collector_samples ->
         acc =
@@ -284,11 +306,11 @@ defmodule Xb5Benchmark.Runner do
               %{acc | collector_key => %{collector_samples | n => [sample | prev_samples_for_n]}}
           end
 
-        group_batch_samples(next, sampling_numbers_map, acc)
+        group_batch_samples(collectors, next, sampling_numbers_map, acc)
     end
   end
 
-  defp group_batch_samples([], _sampling_numbers_map, acc) do
+  defp group_batch_samples(_collectors, [], _sampling_numbers_map, acc) do
     acc
   end
 
@@ -302,6 +324,7 @@ defmodule Xb5Benchmark.Runner do
 
   defp collect_samples({collector_key, collector_samples}, collectors) do
     collector = %Collector{} = Map.fetch!(collectors, collector_key)
+    assert not collector.stable?
 
     merged_results_per_n =
       Enum.reduce(collector_samples, collector.results_per_n, &merge_results_for_size/2)
@@ -345,12 +368,56 @@ defmodule Xb5Benchmark.Runner do
     %{stats | frequency_distribution: :removed, outliers: :removed}
   end
 
+  #####
+
+  defp mark_newly_stable_collectors(collectors, start_ts, now) do
+    :maps.map(&mark_newly_stable_collector(&1, &2, start_ts, now), collectors)
+  end
+
+  defp mark_newly_stable_collector(
+         _collector_key,
+         %Collector{stable?: true} = collector,
+         _start_ts,
+         _now
+       ) do
+    collector
+  end
+
+  defp mark_newly_stable_collector(
+         collector_key,
+         %Collector{stable?: false} = collector,
+         start_ts,
+         now
+       ) do
+    convergence_count = collector_convergence_count({collector_key, collector})
+
+    cond do
+      convergence_count < collector.convergence_limit ->
+        collector
+
+      convergence_count == collector.convergence_limit ->
+        if now - start_ts >=
+             System.convert_time_unit(@min_seconds_before_marking_as_stable, :second, :native) do
+          # Logger.notice("Collector stable: #{collector.group.id} for #{collector.group.impl_mod}")
+          %{collector | stable?: true}
+        else
+          collector
+        end
+    end
+  end
+
+  #####
+
   defp convergence_count(collectors) do
     Enum.reduce(collectors, 0, &(&2 + collector_convergence_count(&1)))
   end
 
   defp collector_convergence_count({_collector_key, %Collector{} = collector}) do
-    Enum.reduce(collector.results_per_n, 0, &(&2 + results_for_size_convergence_count(&1)))
+    if collector.stable? do
+      collector.convergence_limit
+    else
+      Enum.reduce(collector.results_per_n, 0, &(&2 + results_for_size_convergence_count(&1)))
+    end
   end
 
   defp results_for_size_convergence_count({_n, %ResultsForSize{} = results}) do
