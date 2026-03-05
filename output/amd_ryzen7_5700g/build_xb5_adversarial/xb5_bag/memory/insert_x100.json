@@ -1,0 +1,60 @@
+{
+  "build_type": "xb5_adversarial",
+  "name": "memory",
+  "impl_mod": "xb5_bag",
+  "tweaks": "none",
+  "impl_description": ":xb5_bag.insert/2",
+  "group_id": "insert_x100",
+  "measurements": [
+    {
+      "maximum": 26104,
+      "total": 1266848,
+      "mode": [
+        25456,
+        25384,
+        25504,
+        25872,
+        25448
+      ],
+      "n": 0,
+      "percentiles": {
+        "25": 25028.0,
+        "50": 25388.0,
+        "75": 25618.0
+      },
+      "median": 25388.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 25336.96,
+      "variance": 171657.5085714286,
+      "standard_deviation": 414.3157112292854,
+      "standard_deviation_ratio": 0.016352226598190366,
+      "minimum": 24376,
+      "lower_outlier_bound": 24143.0,
+      "upper_outlier_bound": 26503.0,
+      "sample_size": 50
+    },
+    {
+      "maximum": 35552,
+      "total": 1722072,
+      "mode": 34048,
+      "n": 100,
+      "percentiles": {
+        "25": 34084.0,
+        "50": 34316.0,
+        "75": 34740.0
+      },
+      "median": 34316.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 34441.44,
+      "variance": 188762.61877551014,
+      "standard_deviation": 434.46820226054535,
+      "standard_deviation_ratio": 0.012614693295650395,
+      "minimum": 33864,
+      "lower_outlier_bound": 3.31e4,
+      "upper_outlier_bound": 35724.0,
+      "sample_size": 50
+    }
+  ]
+}

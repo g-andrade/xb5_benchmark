@@ -1,0 +1,32 @@
+{
+  "build_type": "random",
+  "name": "runtime",
+  "impl_mod": "xb5_trees",
+  "tweaks": "none",
+  "impl_description": ":xb5_trees.get/2",
+  "group_id": "get_x100",
+  "measurements": [
+    {
+      "maximum": 521972.42941627826,
+      "total": 193079012.86833888,
+      "mode": 513091.5303981077,
+      "n": 100,
+      "percentiles": {
+        "25": 505553.50525522867,
+        "50": 510884.3919709409,
+        "75": 514678.634660518
+      },
+      "median": 510884.3919709409,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 509443.3057212108,
+      "variance": 54984622.52688259,
+      "standard_deviation": 7415.1616655931775,
+      "standard_deviation_ratio": 0.014555420755005606,
+      "minimum": 485111.91531886405,
+      "lower_outlier_bound": 484524.11269964254,
+      "upper_outlier_bound": 532101.1823133109,
+      "sample_size": 379
+    }
+  ]
+}

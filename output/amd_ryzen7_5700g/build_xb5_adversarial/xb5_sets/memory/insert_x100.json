@@ -1,0 +1,67 @@
+{
+  "build_type": "xb5_adversarial",
+  "name": "memory",
+  "impl_mod": "xb5_sets",
+  "tweaks": "none",
+  "impl_description": ":xb5_sets.insert/2",
+  "group_id": "insert_x100",
+  "measurements": [
+    {
+      "maximum": 22240,
+      "total": 1085128,
+      "mode": [
+        22112,
+        22240,
+        22072,
+        21432,
+        22056,
+        21408,
+        21712,
+        21696,
+        21472
+      ],
+      "n": 0,
+      "percentiles": {
+        "25": 21432.0,
+        "50": 21672.0,
+        "75": 22008.0
+      },
+      "median": 21672.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 21702.56,
+      "variance": 98021.06775510205,
+      "standard_deviation": 313.08316427924075,
+      "standard_deviation_ratio": 0.01442609370872564,
+      "minimum": 21088,
+      "lower_outlier_bound": 20568.0,
+      "upper_outlier_bound": 22872.0,
+      "sample_size": 50
+    },
+    {
+      "maximum": 29592,
+      "total": 1444432,
+      "mode": [
+        28656,
+        28592
+      ],
+      "n": 100,
+      "percentiles": {
+        "25": 28662.0,
+        "50": 28880.0,
+        "75": 29094.0
+      },
+      "median": 28880.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 28888.64,
+      "variance": 112378.35755102045,
+      "standard_deviation": 335.2288137243284,
+      "standard_deviation_ratio": 0.011604174295651453,
+      "minimum": 28048,
+      "lower_outlier_bound": 28014.0,
+      "upper_outlier_bound": 29742.0,
+      "sample_size": 50
+    }
+  ]
+}

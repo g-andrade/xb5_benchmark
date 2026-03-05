@@ -1,0 +1,32 @@
+{
+  "build_type": "sequential",
+  "name": "memory",
+  "impl_mod": "gb_trees",
+  "tweaks": "none",
+  "impl_description": ":gb_trees.get/2",
+  "group_id": "get_x100",
+  "measurements": [
+    {
+      "maximum": 0,
+      "total": 0,
+      "mode": 0,
+      "n": 100,
+      "percentiles": {
+        "25": 0.0,
+        "50": 0.0,
+        "75": 0.0
+      },
+      "median": 0.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 0.0,
+      "variance": 0.0,
+      "standard_deviation": 0.0,
+      "standard_deviation_ratio": 0.0,
+      "minimum": 0,
+      "lower_outlier_bound": 0.0,
+      "upper_outlier_bound": 0.0,
+      "sample_size": 50
+    }
+  ]
+}

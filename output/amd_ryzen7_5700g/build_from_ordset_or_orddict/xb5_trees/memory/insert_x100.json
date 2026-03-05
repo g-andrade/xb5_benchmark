@@ -1,0 +1,54 @@
+{
+  "build_type": "from_ordset_or_orddict",
+  "name": "memory",
+  "impl_mod": "xb5_trees",
+  "tweaks": "none",
+  "impl_description": ":xb5_trees.insert/3",
+  "group_id": "insert_x100",
+  "measurements": [
+    {
+      "maximum": 30624,
+      "total": 1480336,
+      "mode": 28952,
+      "n": 0,
+      "percentiles": {
+        "25": 29218.0,
+        "50": 29636.0,
+        "75": 29988.0
+      },
+      "median": 29636.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 29606.72,
+      "variance": 280226.89959183655,
+      "standard_deviation": 529.3646187570874,
+      "standard_deviation_ratio": 0.017879880606736828,
+      "minimum": 28352,
+      "lower_outlier_bound": 28063.0,
+      "upper_outlier_bound": 31143.0,
+      "sample_size": 50
+    },
+    {
+      "maximum": 39936,
+      "total": 1945184,
+      "mode": null,
+      "n": 100,
+      "percentiles": {
+        "25": 38326.0,
+        "50": 39012.0,
+        "75": 39508.0
+      },
+      "median": 39012.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 38903.68,
+      "variance": 363658.34448979597,
+      "standard_deviation": 603.0409144409656,
+      "standard_deviation_ratio": 0.015500870725879032,
+      "minimum": 37792,
+      "lower_outlier_bound": 36553.0,
+      "upper_outlier_bound": 41281.0,
+      "sample_size": 50
+    }
+  ]
+}

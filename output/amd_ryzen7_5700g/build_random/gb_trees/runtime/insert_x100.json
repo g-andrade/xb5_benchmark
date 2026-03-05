@@ -1,0 +1,57 @@
+{
+  "build_type": "random",
+  "name": "runtime",
+  "impl_mod": "gb_trees",
+  "tweaks": "none",
+  "impl_description": ":gb_trees.insert/3",
+  "group_id": "insert_x100",
+  "measurements": [
+    {
+      "maximum": 281088.37418484373,
+      "total": 106560730.07159762,
+      "mode": 277848.78357802547,
+      "n": 0,
+      "percentiles": {
+        "25": 272346.54562248767,
+        "50": 275608.12954673445,
+        "75": 277362.3121481066
+      },
+      "median": 275608.12954673445,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 274641.05688556086,
+      "variance": 13774783.51768418,
+      "standard_deviation": 3711.439547895692,
+      "standard_deviation_ratio": 0.01351378264409388,
+      "minimum": 262917.8092636461,
+      "lower_outlier_bound": 262855.595927769,
+      "upper_outlier_bound": 285887.93660367484,
+      "sample_size": 388
+    },
+    {
+      "maximum": 205720.68068858827,
+      "total": 78054465.29675795,
+      "mode": [
+        195299.14947220404,
+        203817.91722546745
+      ],
+      "n": 100,
+      "percentiles": {
+        "25": 197982.7540860723,
+        "50": 200453.03035799848,
+        "75": 202917.6515831496
+      },
+      "median": 200453.03035799848,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 200139.65460707166,
+      "variance": 11064343.869727628,
+      "standard_deviation": 3326.3108498346373,
+      "standard_deviation_ratio": 0.016619948986946572,
+      "minimum": 189467.86056681204,
+      "lower_outlier_bound": 189052.13301314332,
+      "upper_outlier_bound": 211013.61525446828,
+      "sample_size": 390
+    }
+  ]
+}

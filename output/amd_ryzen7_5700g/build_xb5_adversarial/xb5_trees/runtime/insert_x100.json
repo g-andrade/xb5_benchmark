@@ -1,0 +1,60 @@
+{
+  "build_type": "xb5_adversarial",
+  "name": "runtime",
+  "impl_mod": "xb5_trees",
+  "tweaks": "none",
+  "impl_description": ":xb5_trees.insert/3",
+  "group_id": "insert_x100",
+  "measurements": [
+    {
+      "maximum": 312790.3085050813,
+      "total": 137871201.5520908,
+      "mode": [
+        301318.2674199623,
+        300990.86191743216
+      ],
+      "n": 0,
+      "percentiles": {
+        "25": 296667.6826803675,
+        "50": 299865.36105983896,
+        "75": 303180.9749964738
+      },
+      "median": 299865.36105983896,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 299720.00337411044,
+      "variance": 23000457.675266363,
+      "standard_deviation": 4795.879239020345,
+      "standard_deviation_ratio": 0.016001198401943598,
+      "minimum": 286181.1698513861,
+      "lower_outlier_bound": 285749.292375428,
+      "upper_outlier_bound": 313322.5210928676,
+      "sample_size": 460
+    },
+    {
+      "maximum": 276892.49095253786,
+      "total": 122212365.65555604,
+      "mode": [
+        267061.2050869818,
+        260808.55869366208
+      ],
+      "n": 100,
+      "percentiles": {
+        "25": 259476.74248378183,
+        "50": 263859.90136032866,
+        "75": 267916.45180442417
+      },
+      "median": 263859.90136032866,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 263388.7190852501,
+      "variance": 35220348.42256514,
+      "standard_deviation": 5934.673404877908,
+      "standard_deviation_ratio": 0.022531995392547747,
+      "minimum": 245961.92017551843,
+      "lower_outlier_bound": 245725.6294632755,
+      "upper_outlier_bound": 280708.0986101939,
+      "sample_size": 464
+    }
+  ]
+}

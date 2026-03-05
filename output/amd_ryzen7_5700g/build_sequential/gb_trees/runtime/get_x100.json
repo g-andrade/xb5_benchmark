@@ -1,0 +1,35 @@
+{
+  "build_type": "sequential",
+  "name": "runtime",
+  "impl_mod": "gb_trees",
+  "tweaks": "none",
+  "impl_description": ":gb_trees.get/2",
+  "group_id": "get_x100",
+  "measurements": [
+    {
+      "maximum": 819202.0971573687,
+      "total": 332637233.09157544,
+      "mode": [
+        718845.2469952268,
+        714520.4853023136
+      ],
+      "n": 100,
+      "percentiles": {
+        "25": 724056.5995115007,
+        "50": 741185.4530298844,
+        "75": 760975.6667115206
+      },
+      "median": 741185.4530298844,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 742493.8238651238,
+      "variance": 818053021.5832973,
+      "standard_deviation": 28601.62620522297,
+      "standard_deviation_ratio": 0.03852102911285433,
+      "minimum": 660344.9642093029,
+      "lower_outlier_bound": 657583.1936196189,
+      "upper_outlier_bound": 820535.3676265853,
+      "sample_size": 448
+    }
+  ]
+}

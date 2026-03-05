@@ -1,0 +1,54 @@
+{
+  "build_type": "from_ordset_or_orddict",
+  "name": "memory",
+  "impl_mod": "gb_sets",
+  "tweaks": "none",
+  "impl_description": ":gb_sets.insert/2",
+  "group_id": "insert_x100",
+  "measurements": [
+    {
+      "maximum": 28688,
+      "total": 1273176,
+      "mode": 25824,
+      "n": 0,
+      "percentiles": {
+        "25": 24976.0,
+        "50": 25824.0,
+        "75": 27116.0
+      },
+      "median": 25824.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 25983.183673469386,
+      "variance": 1922648.6530612244,
+      "standard_deviation": 1386.5960670149127,
+      "standard_deviation_ratio": 0.05336513355869945,
+      "minimum": 23680,
+      "lower_outlier_bound": 21618.0,
+      "upper_outlier_bound": 30594.0,
+      "sample_size": 49
+    },
+    {
+      "maximum": 29696,
+      "total": 1476832,
+      "mode": 29600,
+      "n": 100,
+      "percentiles": {
+        "25": 29472.0,
+        "50": 29536.0,
+        "75": 2.96e4
+      },
+      "median": 29536.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 29536.64,
+      "variance": 7794.520816326544,
+      "standard_deviation": 88.28658344463526,
+      "standard_deviation_ratio": 0.002989053035302433,
+      "minimum": 29312,
+      "lower_outlier_bound": 29280.0,
+      "upper_outlier_bound": 29792.0,
+      "sample_size": 50
+    }
+  ]
+}

@@ -6,6 +6,7 @@ defmodule Xb5Benchmark.Runner do
 
   alias Xb5Benchmark.Cases.Case
   alias Xb5Benchmark.Groups.Group
+  alias Xb5Benchmark.Utils
 
   # import ExUnit.Assertions
 
@@ -13,10 +14,11 @@ defmodule Xb5Benchmark.Runner do
 
   @min_measurement_interval_multiplier 20
 
-  @min_stable_count_per_stats 4
+  # FIXME 4
+  @min_stable_count_per_stats 1
 
   # FIXME 60
-  @batch_interval_seconds 5
+  @batch_interval_seconds 1
 
   ## Types
 
@@ -52,6 +54,8 @@ defmodule Xb5Benchmark.Runner do
     typedstruct do
       field(:stats_history, [map], enforce: true)
       field(:processed_samples, [Xb5Benchmark.Runner.processed_sample()], enforce: true)
+      field(:memory_stats, Statistex.t, enforce: true)
+      field(:ops_multiplier, number, enforce: true)
     end
   end
 
@@ -69,8 +73,8 @@ defmodule Xb5Benchmark.Runner do
     Enum.each(:erlang.processes(), &:erlang.garbage_collect/1)
 
     Logger.notice("Collecting memory stats...")
-    cases = Enum.map(cases, &collect_memory_stats/1)
-    :erlang.garbage_collect()
+    cases = Utils.workerpool_map(cases, &collect_memory_stats/1)
+    Enum.each(:erlang.processes(), &:erlang.garbage_collect/1)
 
     collectors = new_collectors(cases)
 
@@ -163,7 +167,9 @@ defmodule Xb5Benchmark.Runner do
             {c.n,
              %ResultsForSize{
                stats_history: [],
-               processed_samples: []
+               processed_samples: [],
+               memory_stats: c.memory_stats,
+               ops_multiplier: c.ops_multiplier
              }}
           end
         )
@@ -307,41 +313,31 @@ defmodule Xb5Benchmark.Runner do
   end
 
   defp merge_results_for_size({n, samples}, results_per_n) do
-    case Map.get(results_per_n, n) do
-      nil ->
-        processed_samples = processed_samples(samples, [])
+    results = %ResultsForSize{} = Map.get(results_per_n, n)
+    processed_samples = processed_samples(results.ops_multiplier, samples, results.processed_samples)
 
-        new_results = %ResultsForSize{
-          stats_history: [stats(processed_samples)],
-          processed_samples: processed_samples
-        }
+    results = %{
+      results
+      | stats_history: [stats(processed_samples) | results.stats_history],
+      processed_samples: processed_samples
+    }
 
-        Map.put(results_per_n, n, new_results)
-
-      %ResultsForSize{} = results ->
-        processed_samples = processed_samples(samples, results.processed_samples)
-
-        results = %{
-          results
-          | stats_history: [stats(processed_samples) | results.stats_history],
-            processed_samples: processed_samples
-        }
-
-        %{results_per_n | n => results}
-    end
+    %{results_per_n | n => results}
   end
 
-  defp processed_samples([sample | next], acc) do
+  defp processed_samples(ops_multiplier, [sample | next], acc) do
     [count | measurement_duration] = sample
 
     processed_sample =
-      System.convert_time_unit(1, :second, :native) * count / measurement_duration
+      (
+        ops_multiplier * count * System.convert_time_unit(1, :second, :native)
+      ) / measurement_duration
 
     acc = [processed_sample | acc]
-    processed_samples(next, acc)
+    processed_samples(ops_multiplier, next, acc)
   end
 
-  defp processed_samples([], acc) do
+  defp processed_samples(_ops_multiplier, [], acc) do
     acc
   end
 

@@ -25,13 +25,16 @@ defmodule Xb5Benchmark do
 
       collectors = Runner.run(cases)
 
+      Logger.notice("Saving JSON stats")
       save_raw_stats!(output_dir, :runtime, collectors)
+      save_raw_stats!(output_dir, :memory, collectors)
 
       Cases.clear_cache(cases, opts)
     end
 
-    Logger.notice("Merging output into CSV...")
+    Logger.notice("Merging JSON stats into CSVs...")
     merge_into_csv(output_dir, :runtime)
+    merge_into_csv(output_dir, :memory)
   end
 
   defp write_system_info!(output_dir) do
@@ -75,8 +78,14 @@ defmodule Xb5Benchmark do
     json_measurements =
       collector.results_per_n
       |> Enum.map(fn {n, %Runner.ResultsForSize{} = results_for_size} ->
-        [latest_stats | _] = results_for_size.stats_history
-        {n, latest_stats}
+        case name do
+          :runtime ->
+            [latest_stats | _] = results_for_size.stats_history
+            {n, latest_stats}
+
+          :memory ->
+            {n, results_for_size.memory_stats}
+        end
       end)
       |> Enum.sort_by(&elem(&1, 0))
       |> Enum.map(&json_raw_stats/1)

@@ -1,0 +1,54 @@
+{
+  "build_type": "xb5_adversarial",
+  "name": "memory",
+  "impl_mod": "gb_trees",
+  "tweaks": "none",
+  "impl_description": ":gb_trees.insert/3",
+  "group_id": "insert_x100",
+  "measurements": [
+    {
+      "maximum": 35360,
+      "total": 1563784,
+      "mode": 31680,
+      "n": 0,
+      "percentiles": {
+        "25": 30620.0,
+        "50": 31680.0,
+        "75": 33320.0
+      },
+      "median": 31680.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 31913.95918367347,
+      "variance": 3140110.7482993193,
+      "standard_deviation": 1772.035763831904,
+      "standard_deviation_ratio": 0.05552541299038953,
+      "minimum": 29000,
+      "lower_outlier_bound": 2.64e4,
+      "upper_outlier_bound": 37680.0,
+      "sample_size": 49
+    },
+    {
+      "maximum": 37120,
+      "total": 1840200,
+      "mode": 36840,
+      "n": 100,
+      "percentiles": {
+        "25": 36670.0,
+        "50": 36840.0,
+        "75": 36970.0
+      },
+      "median": 36840.0,
+      "frequency_distribution": "removed",
+      "outliers": "removed",
+      "average": 36804.0,
+      "variance": 46579.5918367347,
+      "standard_deviation": 215.8230567773858,
+      "standard_deviation_ratio": 0.005864119573344903,
+      "minimum": 36400,
+      "lower_outlier_bound": 36220.0,
+      "upper_outlier_bound": 37420.0,
+      "sample_size": 50
+    }
+  ]
+}

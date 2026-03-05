@@ -24,6 +24,7 @@ defmodule Xb5Benchmark.Cases do
       field(:group, Group.t(), enforce: true)
       field(:fun, fun(), enforce: true)
       field(:fun_arg, fun_arg(), enforce: true)
+      field(:ops_multiplier, number, enforce: true)
       # Set by Runner
       field(:memory_stats, nil | Statistex.t())
       field(:sampling_group_number, nil | pos_integer)
@@ -215,6 +216,7 @@ defmodule Xb5Benchmark.Cases do
         build_type: input_wrapper.build_type,
         suite: input_wrapper.suite,
         group: group,
+        ops_multiplier: length(iterations),
         fun: fun,
         fun_arg: fun_arg
       }
@@ -286,6 +288,9 @@ defmodule Xb5Benchmark.Cases do
 
     ###
 
+    {:single, iterations} = fun_arg
+    ops_multiplier = length(iterations)
+
     c =
       %Case{
         n: input_wrapper.n,
@@ -293,7 +298,8 @@ defmodule Xb5Benchmark.Cases do
         suite: input_wrapper.suite,
         group: group,
         fun: fun,
-        fun_arg: fun_arg
+        fun_arg: fun_arg,
+        ops_multiplier: ops_multiplier
       }
 
     {c, cache}
@@ -521,8 +527,6 @@ defmodule Xb5Benchmark.Cases do
          max_perc_in_common,
          size2
        ) do
-    assert group.tweaks === :none
-
     fun = group.suite_fun
 
     rand_seed_part1 = :erlang.phash2(group.id)
@@ -546,6 +550,9 @@ defmodule Xb5Benchmark.Cases do
         end
       )
 
+    assert group.tweaks === :none
+    ops_multiplier = length(iterations)
+
     fun_arg = {:single, iterations}
 
     c =
@@ -555,7 +562,8 @@ defmodule Xb5Benchmark.Cases do
         suite: input_wrapper.suite,
         group: group,
         fun: fun,
-        fun_arg: fun_arg
+        fun_arg: fun_arg,
+        ops_multiplier: ops_multiplier
       }
 
     {c, cache}
