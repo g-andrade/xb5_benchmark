@@ -12,8 +12,6 @@ defmodule Xb5Benchmark do
 
   ####
 
-  ####
-
   def run(output_dir, opts \\ []) do
     File.mkdir_p!(output_dir)
     write_system_info!(output_dir)
@@ -36,6 +34,55 @@ defmodule Xb5Benchmark do
     merge_into_csv(output_dir, :runtime)
     merge_into_csv(output_dir, :memory)
   end
+
+  def merge_into_single_json(output_dir) do
+    system_info =
+      output_dir
+      |> Path.join("system_info.json")
+      |> File.read!()
+      |> Jason.decode!()
+
+    {runtime_data, runtime_n_values} = get_merged_data(output_dir, :runtime)
+    {memory_data, memory_n_values} = get_merged_data(output_dir, :memory)
+
+    # FIXME
+    pretty? = true
+
+    merged_json = Jason.encode!(%{
+      system_info: system_info,
+      n_values: :lists.usort(runtime_n_values ++ memory_n_values),
+      runtime_data: runtime_data,
+      memory_data: memory_data
+    }, pretty: pretty?)
+
+    output_dir
+    |> Path.join("merged_data.json")
+    |> File.write!(merged_json)
+  end
+
+  ###
+
+  defp get_merged_data(output_dir, name) do
+    json_paths = Path.wildcard(Path.join([output_dir, "*", "*", "#{name}", "*.json"]))
+
+    entries =
+      json_paths
+      |> Enum.map(&(&1 |> File.read!() |> Jason.decode!()))
+
+    n_values =
+      entries
+      |> Enum.map(&(&1["n"]))
+      |> Enum.uniq()
+
+    merged_data =
+      entries
+      |> Enum.group_by(&(&1["build_type"]))
+      |> Map.new(fn {build_type, entries} -> {build_type, Enum.group_by(entries, &(&1["group_id"]))} end)
+
+    {merged_data, n_values}
+  end
+
+  ######
 
   defp write_system_info!(output_dir) do
     system_info = %Benchee.System{} = Benchee.System.system(%Benchee.Suite{}).system
