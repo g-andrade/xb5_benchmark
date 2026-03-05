@@ -14,11 +14,9 @@ defmodule Xb5Benchmark.Runner do
 
   @min_measurement_interval_multiplier 20
 
-  # FIXME 4
-  @min_stable_count_per_stats 1
+  @min_stable_count_per_stats 4
 
-  # FIXME 60
-  @batch_interval_seconds 1
+  @batch_interval_seconds 60
 
   ## Types
 
@@ -54,7 +52,7 @@ defmodule Xb5Benchmark.Runner do
     typedstruct do
       field(:stats_history, [map], enforce: true)
       field(:processed_samples, [Xb5Benchmark.Runner.processed_sample()], enforce: true)
-      field(:memory_stats, Statistex.t, enforce: true)
+      field(:memory_stats, Statistex.t(), enforce: true)
       field(:ops_multiplier, number, enforce: true)
     end
   end
@@ -314,12 +312,14 @@ defmodule Xb5Benchmark.Runner do
 
   defp merge_results_for_size({n, samples}, results_per_n) do
     results = %ResultsForSize{} = Map.get(results_per_n, n)
-    processed_samples = processed_samples(results.ops_multiplier, samples, results.processed_samples)
+
+    processed_samples =
+      processed_samples(results.ops_multiplier, samples, results.processed_samples)
 
     results = %{
       results
       | stats_history: [stats(processed_samples) | results.stats_history],
-      processed_samples: processed_samples
+        processed_samples: processed_samples
     }
 
     %{results_per_n | n => results}
@@ -329,9 +329,8 @@ defmodule Xb5Benchmark.Runner do
     [count | measurement_duration] = sample
 
     processed_sample =
-      (
-        ops_multiplier * count * System.convert_time_unit(1, :second, :native)
-      ) / measurement_duration
+      ops_multiplier * count * System.convert_time_unit(1, :second, :native) /
+        measurement_duration
 
     acc = [processed_sample | acc]
     processed_samples(ops_multiplier, next, acc)
