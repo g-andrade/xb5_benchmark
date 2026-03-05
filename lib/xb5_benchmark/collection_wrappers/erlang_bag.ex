@@ -92,6 +92,21 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangBag do
       end
 
       @impl true
+      defdelegate coll_nth(rank, bag), to: unquote(coll_mod), as: :nth
+
+      @impl true
+      @compile {:inline, coll_rank_and_discard: 2}
+      def coll_rank_and_discard(key, bag) do
+        case unquote(coll_mod).rank(key, bag) do
+          {:rank, _rank} ->
+            bag
+
+          :none ->
+            bag
+        end
+      end
+
+      @impl true
       defdelegate coll_smaller(element, bag), to: unquote(coll_mod), as: :smaller
 
       @impl true
@@ -131,6 +146,8 @@ defmodule Xb5Benchmark.CollectionWrappers.ErlangBag do
       def coll_api_name(:largest), do: ":#{unquote(coll_mod)}.largest/1"
       def coll_api_name(:map), do: ":#{unquote(coll_mod)}.map/2"
       def coll_api_name(:next), do: "iterate :#{unquote(coll_mod)}"
+      def coll_api_name(:nth), do: "#{unquote(coll_mod)}.nth/2"
+      def coll_api_name(:rank), do: "#{unquote(coll_mod)}.rank/2"
       def coll_api_name(:smaller), do: ":#{unquote(coll_mod)}.smaller/2"
       def coll_api_name(:smallest), do: ":#{unquote(coll_mod)}.smallest/1"
       def coll_api_name(:take_largest), do: ":#{unquote(coll_mod)}.take_largest/1"

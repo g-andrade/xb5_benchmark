@@ -1,17 +1,17 @@
 defmodule Xb5Benchmark.Utils do
-  # import ExUnit.Assertions
+  import ExUnit.Assertions
 
   ## API
 
-##  def gb_sets_balance_score({_size, root}) do
-##    {height, _} = gb_sets_count(root)
-##    height
-##  end
-##
-##  def gb_trees_balance_score({_size, root}) do
-##    {height, _} = gb_trees_count(root)
-##    height
-##  end
+  ##  def gb_sets_balance_score({_size, root}) do
+  ##    {height, _} = gb_sets_count(root)
+  ##    height
+  ##  end
+  ##
+  ##  def gb_trees_balance_score({_size, root}) do
+  ##    {height, _} = gb_trees_count(root)
+  ##    height
+  ##  end
 
   def shuffle_with_seed(enum, seed) do
     with_seed(seed, fn -> Enum.shuffle(enum) end)
@@ -23,6 +23,42 @@ defmodule Xb5Benchmark.Utils do
 
   def take_random_with_seed(enum, count, seed) do
     with_seed(seed, fn -> Enum.take_random(enum, count) end)
+  end
+
+  def workerpool_map(enum, fun) do
+    {:ok, _} = Application.ensure_all_started(:taskforce)
+
+    tasks =
+      enum
+      |> Enum.with_index()
+      |> Map.new(fn {value, index} ->
+        {index, :taskforce.task(fun, [value], %{timeout: 300_000})}
+      end)
+
+    %{
+      completed: completed_tasks,
+      individual_timeouts: individual_timeouts,
+      global_timeouts: global_timeouts
+    } = :taskforce.execute(tasks, %{max_workers: min(System.schedulers_online(), 8)})
+
+    assert individual_timeouts === []
+    assert global_timeouts === []
+
+    completed_tasks
+    |> Enum.sort_by(fn {index, _} -> index end)
+    |> Enum.map(fn {_, mapped_value} -> mapped_value end)
+  end
+
+  def memoized(cache, cache_key, init_fun) do
+    case Map.fetch(cache, cache_key) do
+      {:ok, cached_value} ->
+        {cached_value, cache}
+
+      :error ->
+        value = init_fun.()
+        cache = Map.put(cache, cache_key, value)
+        {value, cache}
+    end
   end
 
   #########
@@ -99,5 +135,4 @@ defmodule Xb5Benchmark.Utils do
         {1, 0}
     end
   end
-
 end

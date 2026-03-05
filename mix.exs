@@ -21,8 +21,10 @@ defmodule Xb5Benchmark.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:benchee, "~> 1.5"},
       {:jason, "~> 1.4"},
       {:statistex, "~> 1.1"},
+      {:styler, "~> 1.11"},
       {:taskforce, "~> 1.2"},
       {:typed_struct, "~> 0.3"},
       {:xb5, git: "https://github.com/g-andrade/xb5.git", branch: "main"}

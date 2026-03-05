@@ -10,8 +10,8 @@ defmodule Xb5Benchmark.InputStructures do
 
   ## Constants
 
-  #@min_int_key -Bitwise.<<<(1, 24)
-  #@max_int_key Bitwise.<<<(1, 24) - 1
+  # @min_int_key -Bitwise.<<<(1, 24)
+  # @max_int_key Bitwise.<<<(1, 24) - 1
 
   @min_int_key -Bitwise.<<<(1, 59)
   @max_int_key Bitwise.<<<(1, 59) - 1
@@ -21,7 +21,7 @@ defmodule Xb5Benchmark.InputStructures do
 
   @maximal_input_structure_candidates 50
 
-  @random_candidates_seed_part1 1855106302
+  @random_candidates_seed_part1 1_855_106_302
 
   ## Types
 
@@ -80,19 +80,46 @@ defmodule Xb5Benchmark.InputStructures do
   def maximal_input_structure_candidates(), do: @maximal_input_structure_candidates
 
   def new_second_collection(
-    build_type, size, impl_mod, existing_keys, 
-    new_keys_constraint, keys_in_common, common_rand_seed
-  ) do
+        build_type,
+        size,
+        impl_mod,
+        existing_keys,
+        new_keys_constraint,
+        keys_in_common,
+        common_rand_seed,
+        cache
+      ) do
     [seed_part1 | seed_part2] = common_rand_seed
 
     new_amount = size - length(keys_in_common)
     assert new_amount >= 0
 
-    new_keys = seeded_new_keys_to_insert(existing_keys, new_keys_constraint, new_amount, seed_part1, seed_part2)
+    {new_keys, cache} =
+      Utils.memoized(
+        cache,
+        {
+          __MODULE__,
+          :new_second_collection,
+          :new_keys,
+          :erlang.phash2(existing_keys),
+          :erlang.phash2(keys_in_common),
+          common_rand_seed
+        },
+        fn ->
+          seeded_new_keys_to_insert(
+            existing_keys,
+            new_keys_constraint,
+            new_amount,
+            seed_part1,
+            seed_part2
+          )
+        end
+      )
+
     initial_keys = Enum.sort(keys_in_common ++ new_keys)
     assert length(initial_keys) === size
 
-    _ = 
+    _ =
       case new_keys_constraint do
         :none ->
           :ok
@@ -108,7 +135,10 @@ defmodule Xb5Benchmark.InputStructures do
     # all iterations sharing `common_rand_seed`. This should be fine.
     pseudo_candidate_id = -1
 
-    new_input_structure_candidate(build_type, size, initial_keys, impl_mod, pseudo_candidate_id)
+    collection =
+      new_input_structure_candidate(build_type, size, initial_keys, impl_mod, pseudo_candidate_id)
+
+    {collection, cache}
   end
 
   ## Internal
@@ -146,13 +176,14 @@ defmodule Xb5Benchmark.InputStructures do
 
     for suite <- all_suites(), reduce: acc do
       acc ->
-      accumulate_new_input_structure(n, build_type, initial_keys, suite, acc)
+        accumulate_new_input_structure(n, build_type, initial_keys, suite, acc)
     end
   end
 
   ##
 
-  defp initial_keys_amount(n, build_type) when build_type in [:sequential, :random, :from_ordset_or_orddict] do
+  defp initial_keys_amount(n, build_type)
+       when build_type in [:sequential, :random, :from_ordset_or_orddict] do
     n
   end
 
@@ -183,24 +214,53 @@ defmodule Xb5Benchmark.InputStructures do
 
   defp seeded_new_keys_to_insert(existing_keys, constraint, amount, seed_part1, seed_part2) do
     acc = []
-    seeded_new_keys_to_insert_recur(existing_keys, constraint, acc, seed_part1, seed_part2, 0, amount)
+
+    seeded_new_keys_to_insert_recur(
+      existing_keys,
+      constraint,
+      acc,
+      seed_part1,
+      seed_part2,
+      0,
+      amount
+    )
   end
 
   defp seeded_new_keys_to_insert_recur(
-    existing_keys, constraint, acc, seed_part1, seed_part2, seed_part3, amount
-  ) when amount > 0 do
+         existing_keys,
+         constraint,
+         acc,
+         seed_part1,
+         seed_part2,
+         seed_part3,
+         amount
+       )
+       when amount > 0 do
     new_key = new_key_with_seed({seed_part1, seed_part2, seed_part3}, constraint)
 
     if MapSet.member?(existing_keys, new_key) do
       # Logger.notice("CONFLICT")
       seeded_new_keys_to_insert_recur(
-        existing_keys, constraint, acc, seed_part1, seed_part2, seed_part3 + 1, amount
+        existing_keys,
+        constraint,
+        acc,
+        seed_part1,
+        seed_part2,
+        seed_part3 + 1,
+        amount
       )
     else
       existing_keys = MapSet.put(existing_keys, new_key)
       acc = [new_key | acc]
+
       seeded_new_keys_to_insert_recur(
-        existing_keys, constraint, acc, seed_part1, seed_part2, seed_part3 + 1, amount - 1
+        existing_keys,
+        constraint,
+        acc,
+        seed_part1,
+        seed_part2,
+        seed_part3 + 1,
+        amount - 1
       )
     end
   end
@@ -217,7 +277,7 @@ defmodule Xb5Benchmark.InputStructures do
       Suites.ErlGbTree,
       Suites.ErlXb5Bag,
       Suites.ErlXb5Set,
-      Suites.ErlXb5Tree,
+      Suites.ErlXb5Tree
     ]
   end
 
@@ -233,7 +293,11 @@ defmodule Xb5Benchmark.InputStructures do
 
     new_candidate_ids = Enum.map(1..amount_missing//1, &(amount_cached + &1))
 
-    new_candidates = workerpool_map(new_candidate_ids, &new_input_structure_candidate(build_type, n, initial_keys, impl_mod, &1))
+    new_candidates =
+      Utils.workerpool_map(
+        new_candidate_ids,
+        &new_input_structure_candidate(build_type, n, initial_keys, impl_mod, &1)
+      )
 
     candidates = Enum.slice(cached_candidates ++ new_candidates, 0, amount_of_candidates)
 
@@ -241,11 +305,17 @@ defmodule Xb5Benchmark.InputStructures do
       save_cache(cache_path, candidates)
     end
 
-    variants = 
+    variants =
       case amount_of_candidates do
         1 ->
           [single_candidate] = candidates
-          copies = Utils.deep_copy_term_n_times(single_candidate, @maximal_input_structure_candidates - 1)
+
+          copies =
+            Utils.deep_copy_term_n_times(
+              single_candidate,
+              @maximal_input_structure_candidates - 1
+            )
+
           [single_candidate | copies]
 
         @maximal_input_structure_candidates ->
@@ -272,7 +342,8 @@ defmodule Xb5Benchmark.InputStructures do
     [wrapper | acc]
   end
 
-  defp amount_of_input_structure_candidates(build_type) when build_type in [:sequential, :from_ordset_or_orddict, :xb5_adversarial] do
+  defp amount_of_input_structure_candidates(build_type)
+       when build_type in [:sequential, :from_ordset_or_orddict, :xb5_adversarial] do
     1
   end
 
@@ -287,7 +358,13 @@ defmodule Xb5Benchmark.InputStructures do
 
     impl_mod_suffix = impl_mod.module_info(:md5) |> Base.encode16(case: :lower)
 
-    Path.join(["_cache", "input_structures", n_str, "#{build_type}", "#{impl_mod}_#{impl_mod_suffix}"])
+    Path.join([
+      "_cache",
+      "input_structures",
+      n_str,
+      "#{build_type}",
+      "#{impl_mod}_#{impl_mod_suffix}"
+    ])
   end
 
   defp read_cached_candidates(path, impl_mod) do
@@ -302,7 +379,10 @@ defmodule Xb5Benchmark.InputStructures do
           cached_candidates
         catch
           class, reason ->
-            Logger.error("Failed to read cached candidates: #{inspect {class, reason, __STACKTRACE__}}")
+            Logger.error(
+              "Failed to read cached candidates: #{inspect({class, reason, __STACKTRACE__})}"
+            )
+
             []
         end
 
@@ -338,14 +418,16 @@ defmodule Xb5Benchmark.InputStructures do
       File.write!(path, encoded)
     catch
       class, reason ->
-        Logger.error("Failed to cache candidates: #{inspect {class, reason, __STACKTRACE__}}")
+        Logger.error("Failed to cache candidates: #{inspect({class, reason, __STACKTRACE__})}")
     end
   end
 
   ##
 
   defp new_input_structure_candidate(:sequential, n, initial_keys, impl_mod, _candidate_id) do
-    candidate = Enum.reduce(initial_keys, impl_mod_new(impl_mod), &impl_mod_insert(impl_mod, &1, &2))
+    candidate =
+      Enum.reduce(initial_keys, impl_mod_new(impl_mod), &impl_mod_insert(impl_mod, &1, &2))
+
     assert impl_mod.size(candidate) === n
     candidate
   end
@@ -356,13 +438,20 @@ defmodule Xb5Benchmark.InputStructures do
 
     # Logger.notice("[#{n}] [#{impl_mod}] Shuffled keys: #{inspect shuffled_keys}")
 
-    candidate = Enum.reduce(shuffled_keys, impl_mod_new(impl_mod), &impl_mod_insert(impl_mod, &1, &2))
+    candidate =
+      Enum.reduce(shuffled_keys, impl_mod_new(impl_mod), &impl_mod_insert(impl_mod, &1, &2))
 
     assert impl_mod.size(candidate) === n
     candidate
   end
 
-  defp new_input_structure_candidate(:from_ordset_or_orddict, n, initial_keys, impl_mod, _candidate_id) do
+  defp new_input_structure_candidate(
+         :from_ordset_or_orddict,
+         n,
+         initial_keys,
+         impl_mod,
+         _candidate_id
+       ) do
     candidate = impl_mod_from_ordset_or_orddict(impl_mod, initial_keys)
     assert impl_mod.size(candidate) === n
     candidate
@@ -381,7 +470,9 @@ defmodule Xb5Benchmark.InputStructures do
       |> Enum.take(delete_amount)
       |> Enum.map(&elem(&1, 0))
 
-    candidate = Enum.reduce(initial_keys, impl_mod_new(impl_mod), &impl_mod_insert(impl_mod, &1, &2))
+    candidate =
+      Enum.reduce(initial_keys, impl_mod_new(impl_mod), &impl_mod_insert(impl_mod, &1, &2))
+
     candidate = Enum.reduce(delete_keys, candidate, &impl_mod.delete/2)
 
     assert impl_mod.size(candidate) === n
@@ -410,7 +501,8 @@ defmodule Xb5Benchmark.InputStructures do
 
   ##
 
-  defp impl_mod_from_ordset_or_orddict(impl_mod, initial_keys) when impl_mod in [:xb5_trees, :gb_trees] do
+  defp impl_mod_from_ordset_or_orddict(impl_mod, initial_keys)
+       when impl_mod in [:xb5_trees, :gb_trees] do
     initial_keys
     |> Enum.map(&{&1, :value})
     |> impl_mod.from_orddict()
@@ -428,32 +520,5 @@ defmodule Xb5Benchmark.InputStructures do
 
   defp impl_mod_keys(impl_mod, collection) do
     impl_mod.to_list(collection)
-  end
-
-  ###############
-
-  defp workerpool_map(enum, fun) do
-    {:ok, _} = Application.ensure_all_started(:taskforce)
-  
-    tasks =
-      enum
-      |> Enum.with_index()
-      |> Map.new(
-        fn {value, index} ->
-          {index, :taskforce.task(fun, [value], %{timeout: 300_000})}
-        end)
-  
-    %{
-      completed: completed_tasks,
-      individual_timeouts: individual_timeouts,
-      global_timeouts: global_timeouts
-    } = :taskforce.execute(tasks, %{max_workers: min(System.schedulers_online(), 8)})
-  
-    assert individual_timeouts === []
-    assert global_timeouts === []
-  
-    completed_tasks
-    |> Enum.sort_by(fn {index, _} -> index end)
-    |> Enum.map(fn {_, mapped_value} -> mapped_value end)
   end
 end

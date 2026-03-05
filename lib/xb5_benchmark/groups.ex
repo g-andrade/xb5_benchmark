@@ -11,8 +11,9 @@ defmodule Xb5Benchmark.Groups do
       field(:includes_empty?, boolean, enforce: true)
       field(:impl_mod, module, enforce: true)
       field(:suite_fun, fun(), enforce: true)
+      field(:iteration_fun, fun(), enforce: true)
       field(:tweaks, term, enforce: true)
-      field(:impl_description, String.t, enforce: true)
+      field(:impl_description, String.t(), enforce: true)
     end
   end
 
@@ -23,59 +24,65 @@ defmodule Xb5Benchmark.Groups do
   @set_op_max_percentages_in_common [0.0, 0.5, 1.0]
   @set_op_sizes [50, 100, 500, 1000]
 
-  @set_op_params for max_percentage_in_common <- @set_op_max_percentages_in_common, size2 <- @set_op_sizes, do: {max_percentage_in_common, size2}
+  @set_op_params for max_percentage_in_common <- @set_op_max_percentages_in_common,
+                     size2 <- @set_op_sizes,
+                     do: {max_percentage_in_common, size2}
 
   #####
 
-  def add_new_x100(suite_fun, impl_mod, impl_description) do
+  def add_new_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :missing_and_unique, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
-  
-  def add_existing_x100(suite_fun, impl_mod, impl_description) do
+
+  def add_existing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :existing_and_unique, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
-  
-  def delete_x100(suite_fun, impl_mod, impl_description) do
+
+  def delete_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :existing_and_unique, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
-  
-  def delete_any_missing_x100(suite_fun, impl_mod, impl_description) do
+
+  def delete_any_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def difference(suite_fun, impl_mod, impl_description) do
+  def difference(suite_fun, iteration_fun, impl_mod, impl_description) do
     Enum.map(
       @set_op_params,
       fn {max_percentage_in_common, size2} ->
@@ -86,133 +93,145 @@ defmodule Xb5Benchmark.Groups do
           includes_empty?: true,
           impl_mod: impl_mod,
           suite_fun: suite_fun,
+          iteration_fun: iteration_fun,
           tweaks: :none,
           impl_description: impl_description
         }
-      end)
+      end
+    )
   end
 
-  def filter_all(suite_fun, impl_mod, impl_description) do
+  def filter_all(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def filter_none(suite_fun, impl_mod, impl_description) do
+  def filter_none(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def filtermap_all(suite_fun, impl_mod, impl_description) do
+  def filtermap_all(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def filtermap_all_mapped(suite_fun, impl_mod, impl_description) do
+  def filtermap_all_mapped(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def filtermap_none(suite_fun, impl_mod, impl_description) do
+  def filtermap_none(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def foldl(suite_fun, impl_mod, impl_description) do
+  def foldl(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def from_list(suite_fun, impl_mod, impl_description) do
+  def from_list(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:bulk_constructor, [:sequential, :random]},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def from_ordset_or_orddict(suite_fun, impl_mod, impl_description) do
+  def from_ordset_or_orddict(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: :"from_ordset / from_orddict",
       type: {:bulk_constructor, [:sequential]},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def get_x100(suite_fun, impl_mod, impl_description) do
+  def get_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def insert_x100(suite_fun, impl_mod, impl_description) do
+  def insert_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :missing_and_unique, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def intersection(suite_fun, impl_mod, impl_description) do
+  def intersection(suite_fun, iteration_fun, impl_mod, impl_description) do
     Enum.map(
       @set_op_params,
       fn {max_percentage_in_common, size2} ->
@@ -223,25 +242,28 @@ defmodule Xb5Benchmark.Groups do
           includes_empty?: true,
           impl_mod: impl_mod,
           suite_fun: suite_fun,
+          iteration_fun: iteration_fun,
           tweaks: :none,
           impl_description: impl_description
         }
-      end)
+      end
+    )
   end
 
-  def iterate(suite_fun, impl_mod, impl_description) do
+  def iterate(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def is_disjoint(suite_fun, impl_mod, impl_description) do
+  def is_disjoint(suite_fun, iteration_fun, impl_mod, impl_description) do
     Enum.map(
       @set_op_params,
       fn {max_percentage_in_common, size2} ->
@@ -252,13 +274,15 @@ defmodule Xb5Benchmark.Groups do
           includes_empty?: true,
           impl_mod: impl_mod,
           suite_fun: suite_fun,
+          iteration_fun: iteration_fun,
           tweaks: :none,
           impl_description: impl_description
         }
-      end)
+      end
+    )
   end
 
-  def is_equal(suite_fun, impl_mod, impl_description) do
+  def is_equal(suite_fun, iteration_fun, impl_mod, impl_description) do
     Enum.map(
       [0.0, 0.5, 1.0],
       fn percentage_in_common ->
@@ -277,41 +301,47 @@ defmodule Xb5Benchmark.Groups do
         %Group{
           id: id,
           keywords: [:is_equal],
-          type: {:each_iteration_a_second_collection, {percentage_in_common, :smallest_keys}, :same_size},
+          type:
+            {:each_iteration_a_second_collection, {percentage_in_common, :smallest_keys},
+             :same_size},
           includes_empty?: true,
           impl_mod: impl_mod,
           suite_fun: suite_fun,
+          iteration_fun: iteration_fun,
           tweaks: :none,
           impl_description: impl_description
         }
-      end)
+      end
+    )
   end
 
-  def is_member_existing_x100(suite_fun, impl_mod, impl_description) do
+  def is_member_existing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def is_member_missing_x100(suite_fun, impl_mod, impl_description) do
+  def is_member_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def is_subset(suite_fun, impl_mod, impl_description) do
+  def is_subset(suite_fun, iteration_fun, impl_mod, impl_description) do
     Enum.map(
       [0.0, 0.5, 1.0],
       fn percentage_in_common ->
@@ -330,197 +360,242 @@ defmodule Xb5Benchmark.Groups do
         %Group{
           id: id,
           keywords: [:is_subset],
-          type: {:each_iteration_a_second_collection, {percentage_in_common, :largest_keys}, :same_size},
+          type:
+            {:each_iteration_a_second_collection, {percentage_in_common, :largest_keys},
+             :same_size},
           includes_empty?: true,
           impl_mod: impl_mod,
           suite_fun: suite_fun,
+          iteration_fun: iteration_fun,
           tweaks: :none,
           impl_description: impl_description
         }
-      end)
+      end
+    )
   end
 
-  def keys(suite_fun, impl_mod, impl_description) do
+  def keys(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def larger_x100(suite_fun, impl_mod, impl_description) do
+  def larger_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def largest(suite_fun, impl_mod, impl_description) do
+  def largest(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: {:duplicate_variants, 10},
       impl_description: impl_description
     }
   end
 
-  def lookup_existing_x100(suite_fun, impl_mod, impl_description) do
+  def lookup_existing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def lookup_missing_x100(suite_fun, impl_mod, impl_description) do
+  def lookup_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def map(suite_fun, impl_mod, impl_description) do
+  def map(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def smaller_x100(suite_fun, impl_mod, impl_description) do
+  def nth_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_ranks, 100},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  def rank_existing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def smallest(suite_fun, impl_mod, impl_description) do
+  def smaller_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
+    %Group{
+      id: elem(__ENV__.function, 0),
+      type: {:each_iteration_many_keys, :existing, 100},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  def smallest(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: {:duplicate_variants, 10},
       impl_description: impl_description
     }
   end
 
-  def take_x100(suite_fun, impl_mod, impl_description) do
+  def take_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :existing_and_unique, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def take_any_missing_x100(suite_fun, impl_mod, impl_description) do
+  def take_any_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def take_largest(suite_fun, impl_mod, impl_description) do
+  def take_largest(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: {:duplicate_variants, 10},
       impl_description: impl_description
     }
   end
 
-  def take_largest_x100(suite_fun, impl_mod, impl_description) do
+  def take_largest_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_no_keys, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def take_smallest(suite_fun, impl_mod, impl_description) do
+  def take_smallest(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: {:duplicate_variants, 10},
       impl_description: impl_description
     }
   end
 
-  def take_smallest_x100(suite_fun, impl_mod, impl_description) do
+  def take_smallest_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_no_keys, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def to_list(suite_fun, impl_mod, impl_description) do
+  def to_list(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def union(suite_fun, impl_mod, impl_description) do
+  def union(suite_fun, iteration_fun, impl_mod, impl_description) do
     Enum.map(
       @set_op_params,
       fn {max_percentage_in_common, size2} ->
@@ -531,31 +606,35 @@ defmodule Xb5Benchmark.Groups do
           includes_empty?: true,
           impl_mod: impl_mod,
           suite_fun: suite_fun,
+          iteration_fun: iteration_fun,
           tweaks: :none,
           impl_description: impl_description
         }
-      end)
+      end
+    )
   end
 
-  def update_x100(suite_fun, impl_mod, impl_description) do
+  def update_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
   end
 
-  def values(suite_fun, impl_mod, impl_description) do
+  def values(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       type: :each_iteration_no_keys,
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
       tweaks: :none,
       impl_description: impl_description
     }
@@ -563,10 +642,10 @@ defmodule Xb5Benchmark.Groups do
 
   ##########
 
-#  defp set_op_group_name(base_name, percentage_in_common) do
-#    percentage_str = String.pad_leading("#{trunc(percentage_in_common * 100)}", 3, "0")
-#    String.to_atom("#{base_name}_#{percentage_str}")
-#  end
+  #  defp set_op_group_name(base_name, percentage_in_common) do
+  #    percentage_str = String.pad_leading("#{trunc(percentage_in_common * 100)}", 3, "0")
+  #    String.to_atom("#{base_name}_#{percentage_str}")
+  #  end
 
   defp set_op_group_name(base_name, max_percentage_in_common, size2) do
     percentage_str = String.pad_leading("#{trunc(max_percentage_in_common * 100)}", 3, "0")

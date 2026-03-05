@@ -21,24 +21,25 @@ defmodule Xb5Benchmark.Cases do
       field(:n, non_neg_integer, enforce: true)
       field(:build_type, atom, enforce: true)
       field(:suite, module, enforce: true)
-      field(:group, Group.t, enforce: true)
+      field(:group, Group.t(), enforce: true)
       field(:fun, fun(), enforce: true)
       field(:fun_arg, fun_arg(), enforce: true)
-      field(:sampling_group_number, nil | pos_integer) # Set by Runner
+      # Set by Runner
+      field(:memory_stats, nil | Statistex.t())
+      field(:sampling_group_number, nil | pos_integer)
     end
 
-    @type fun_arg() :: (
-      {:single, term}
-      | {:random_pick, tuple()}
-    )
+    @type fun_arg() ::
+            {:single, term}
+            | {:random_pick, tuple()}
   end
 
   ## API
 
   def get(build_type, opts \\ []) do
-    Logger.notice("Preparing cases for build_type #{inspect build_type}...")
+    Logger.notice("Preparing cases for build_type #{inspect(build_type)}...")
     input_structures = get_input_structures(build_type, opts)
-    grouped_structures = Enum.group_by(input_structures, &(&1.impl_mod))
+    grouped_structures = Enum.group_by(input_structures, & &1.impl_mod)
     cases = get_cases(grouped_structures, opts)
     :erlang.garbage_collect(self())
     cases
@@ -80,18 +81,24 @@ defmodule Xb5Benchmark.Cases do
     groups =
       if keywords_to_filter !== nil do
         Enum.filter(
-          groups, 
+          groups,
           fn %Group{} = group ->
-            (
-              group.id in keywords_to_filter
-              or Enum.any?(group.keywords, &(&1 in keywords_to_filter))
-            )
-          end)
+            group.id in keywords_to_filter or
+              Enum.any?(group.keywords, &(&1 in keywords_to_filter))
+          end
+        )
       else
         groups
       end
 
-    Enum.flat_map(groups, &group_to_cases(&1, grouped_structures))
+    total_groups = length(groups)
+    cache = %{}
+
+    groups
+    |> Enum.sort_by(& &1.id)
+    |> Enum.with_index()
+    |> Enum.flat_map_reduce(cache, &group_to_cases(&1, total_groups, grouped_structures, &2))
+    |> elem(0)
   end
 
   defp get_groups() do
@@ -100,12 +107,18 @@ defmodule Xb5Benchmark.Cases do
       Suites.ErlGbTree,
       Suites.ErlXb5Bag,
       Suites.ErlXb5Set,
-      Suites.ErlXb5Tree,
+      Suites.ErlXb5Tree
     ]
-    |> Enum.flat_map(&(&1.groups()))
+    |> Enum.flat_map(& &1.groups())
   end
 
-  defp group_to_cases(%Group{} = group, grouped_structures) do
+  defp group_to_cases({%Group{} = group, group_index}, total_groups, grouped_structures, cache) do
+    if rem(group_index, 5) === 0 do
+      Logger.notice(
+        "[group_to_case] #{floor(100 * group_index / total_groups)}% [#{group_index} / #{total_groups} - #{group.id}]"
+      )
+    end
+
     structures = Map.fetch!(grouped_structures, group.impl_mod)
 
     structures =
@@ -121,25 +134,40 @@ defmodule Xb5Benchmark.Cases do
       {:bulk_constructor, allowed_build_types} ->
         structures
         |> Enum.filter(&(&1.build_type in allowed_build_types))
-        |> Enum.map(&new_bulk_constructor_case(group, &1))
+        |> Enum.map_reduce(cache, &new_bulk_constructor_case(group, &1, &2))
 
       :each_iteration_no_keys ->
-        Enum.map(structures, &new_alternate_case(group, &1, :no_keys, 0))
+        Enum.map_reduce(structures, cache, &new_alternate_case(group, &1, &2, :no_keys, 0))
 
       {:each_iteration_no_keys, arg} ->
-        Enum.map(structures, &new_alternate_case(group, &1, {:no_keys, arg}, 0))
+        Enum.map_reduce(structures, cache, &new_alternate_case(group, &1, &2, {:no_keys, arg}, 0))
 
       {:each_iteration_many_keys, key_status, batch_amount} ->
-        Enum.map(structures, &new_alternate_case(group, &1, key_status, batch_amount))
+        Enum.map_reduce(
+          structures,
+          cache,
+          &new_alternate_case(group, &1, &2, key_status, batch_amount)
+        )
+
+      {:each_iteration_many_ranks, amount} ->
+        Enum.map_reduce(structures, cache, &new_alternate_case(group, &1, &2, :ranks, amount))
 
       {:each_iteration_a_second_collection, max_perc_in_common, size2} ->
-        Enum.map(structures, &new_second_collection_case(group, &1, max_perc_in_common, size2))
+        Enum.map_reduce(
+          structures,
+          cache,
+          &new_second_collection_case(group, &1, &2, max_perc_in_common, size2)
+        )
     end
   end
 
   ###
 
-  defp new_bulk_constructor_case(%Group{} = group, %InputStructures.Wrapper{} = input_wrapper) do
+  defp new_bulk_constructor_case(
+         %Group{} = group,
+         %InputStructures.Wrapper{} = input_wrapper,
+         cache
+       ) do
     assert group.tweaks === :none
 
     rand_seed_part1 = :erlang.phash2(group.id)
@@ -149,139 +177,259 @@ defmodule Xb5Benchmark.Cases do
 
     sorted_input_list =
       if String.contains?(group.impl_description, "from_orddict") do
-        Enum.map(existing_keys_list, &({&1, :value}))
+        Enum.map(existing_keys_list, &{&1, :value})
       else
         existing_keys_list
       end
 
-    iterations =
-      case input_wrapper.build_type do
-        :sequential ->
-          copies = Utils.deep_copy_term_n_times(sorted_input_list, amount_of_variants - 1)
-          [sorted_input_list | copies]
+    {iterations, cache} =
+      Utils.memoized(
+        cache,
+        {:iterations_from_sorted_input_list, input_wrapper.n, :erlang.phash2(sorted_input_list)},
+        fn ->
+          case input_wrapper.build_type do
+            :sequential ->
+              copies = Utils.deep_copy_term_n_times(sorted_input_list, amount_of_variants - 1)
+              [sorted_input_list | copies]
 
-        :random ->
-          Enum.map(
-            0..(amount_of_variants - 1)//1,
-            fn iteration_index ->
-              Utils.shuffle_with_seed(sorted_input_list, {rand_seed_part1, iteration_index, 637})
-            end)
-      end
+            :random ->
+              Enum.map(
+                0..(amount_of_variants - 1)//1,
+                fn iteration_index ->
+                  Utils.shuffle_with_seed(
+                    sorted_input_list,
+                    {rand_seed_part1, iteration_index, 637}
+                  )
+                end
+              )
+          end
+        end
+      )
 
     fun = group.suite_fun
     fun_arg = {:single, iterations}
 
-    %Case{
-      n: input_wrapper.n,
-      build_type: input_wrapper.build_type,
-      suite: input_wrapper.suite,
-      group: group,
-      fun: fun,
-      fun_arg: fun_arg
-    }
+    c =
+      %Case{
+        n: input_wrapper.n,
+        build_type: input_wrapper.build_type,
+        suite: input_wrapper.suite,
+        group: group,
+        fun: fun,
+        fun_arg: fun_arg
+      }
+
+    {c, cache}
   end
 
   ###
 
-  defp new_alternate_case(%Group{} = group, %InputStructures.Wrapper{} = input_wrapper, key_status, batch_amount) do
+  defp new_alternate_case(
+         %Group{} = group,
+         %InputStructures.Wrapper{} = input_wrapper,
+         cache,
+         key_status,
+         batch_amount
+       ) do
     fun = group.suite_fun
 
     rand_seed_part1 = :erlang.phash2(group.id)
 
-    fun_arg =
+    {fun_arg, cache} =
       case group.tweaks do
         {:duplicate_variants, multiplier} ->
           expanded_variants = Enum.flat_map(1..multiplier//1, fn _ -> input_wrapper.variants end)
 
-          iterations = 
-            Enum.with_index(
-              expanded_variants,
-              fn variant, iteration_index ->
+          {iterations, cache} =
+            expanded_variants
+            |> Enum.with_index()
+            |> Enum.flat_map_reduce(
+              cache,
+              fn {variant, iteration_index}, cache ->
                 common_rand_seed = [rand_seed_part1 | iteration_index]
-                alternate_case_iteration(variant, input_wrapper, key_status, batch_amount, common_rand_seed)
+
+                alternate_case_iteration(
+                  variant,
+                  input_wrapper,
+                  key_status,
+                  batch_amount,
+                  common_rand_seed,
+                  cache
+                )
               end
             )
-            |> Enum.flat_map(&(&1))
 
-          {:single, iterations}
+          {{:single, iterations}, cache}
 
         :none ->
-          iterations = 
-            Enum.with_index(
-              input_wrapper.variants,
-              fn variant, iteration_index ->
+          {iterations, cache} =
+            input_wrapper.variants
+            |> Enum.with_index()
+            |> Enum.flat_map_reduce(
+              cache,
+              fn {variant, iteration_index}, cache ->
                 common_rand_seed = [rand_seed_part1 | iteration_index]
-                alternate_case_iteration(variant, input_wrapper, key_status, batch_amount, common_rand_seed)
+
+                alternate_case_iteration(
+                  variant,
+                  input_wrapper,
+                  key_status,
+                  batch_amount,
+                  common_rand_seed,
+                  cache
+                )
               end
             )
-            |> Enum.flat_map(&(&1))
 
-          {:single, iterations}
+          {{:single, iterations}, cache}
       end
 
     ###
 
-    %Case{
-      n: input_wrapper.n,
-      build_type: input_wrapper.build_type,
-      suite: input_wrapper.suite,
-      group: group,
-      fun: fun,
-      fun_arg: fun_arg
-    }
+    c =
+      %Case{
+        n: input_wrapper.n,
+        build_type: input_wrapper.build_type,
+        suite: input_wrapper.suite,
+        group: group,
+        fun: fun,
+        fun_arg: fun_arg
+      }
+
+    {c, cache}
   end
 
-  defp alternate_case_iteration(input_variant, %InputStructures.Wrapper{}, :no_keys, _, _) do
-    [input_variant]
+  defp alternate_case_iteration(input_variant, %InputStructures.Wrapper{}, :no_keys, _, _, cache) do
+    {[input_variant], cache}
   end
-
-  defp alternate_case_iteration(input_variant, %InputStructures.Wrapper{}, {:no_keys, arg}, _, _) do
-    [input_variant, arg]
-  end
-
-#  defp alternate_case_iteration(
-#    input_variant, %InputStructures.Wrapper{} = input_wrapper, key_status,
-#    batch_amount, common_rand_seed
-#  ) when batch_amount === 1
-#  do
-#    case key_status do
-#      :existing ->
-#        assert input_wrapper.n !== 0
-#        key_index = 0
-#        [input_variant, existing_key(input_wrapper.existing_keys_tuple, common_rand_seed, key_index)]
-#
-#      :missing ->
-#        key_index = 0
-#        [input_variant, missing_key(input_wrapper.existing_keys_set, common_rand_seed, key_index)]
-#    end
-#  end
 
   defp alternate_case_iteration(
-    input_variant, %InputStructures.Wrapper{} = input_wrapper, key_status,
-    batch_amount, common_rand_seed
-  ) do
+         input_variant,
+         %InputStructures.Wrapper{},
+         {:no_keys, arg},
+         _,
+         _,
+         cache
+       ) do
+    {[input_variant, arg], cache}
+  end
+
+  defp alternate_case_iteration(
+         input_variant,
+         %InputStructures.Wrapper{} = input_wrapper,
+         :ranks,
+         batch_amount,
+         common_rand_seed,
+         cache
+       ) do
+    [seed_part1 | seed_part2] = common_rand_seed
+
+    ranks =
+      Enum.map(
+        0..(batch_amount - 1),
+        fn key_index ->
+          Utils.rand_uniform_with_seed(input_wrapper.n, {seed_part1, seed_part2, key_index})
+        end
+      )
+
+    {[input_variant, ranks], cache}
+  end
+
+  #  defp alternate_case_iteration(
+  #    input_variant, %InputStructures.Wrapper{} = input_wrapper, key_status,
+  #    batch_amount, common_rand_seed
+  #  ) when batch_amount === 1
+  #  do
+  #    case key_status do
+  #      :existing ->
+  #        assert input_wrapper.n !== 0
+  #        key_index = 0
+  #        [input_variant, existing_key(input_wrapper.existing_keys_tuple, common_rand_seed, key_index)]
+  #
+  #      :missing ->
+  #        key_index = 0
+  #        [input_variant, missing_key(input_wrapper.existing_keys_set, common_rand_seed, key_index)]
+  #    end
+  #  end
+
+  defp alternate_case_iteration(
+         input_variant,
+         %InputStructures.Wrapper{} = input_wrapper,
+         key_status,
+         batch_amount,
+         common_rand_seed,
+         cache
+       ) do
+    existing_keys_hash = :erlang.phash2(input_wrapper.existing_keys_list)
+
     case key_status do
       :existing ->
         assert input_wrapper.n !== 0
-        [input_variant, existing_keys(
-          input_wrapper.existing_keys_tuple, common_rand_seed, batch_amount
-        )]
+
+        {keys, cache} =
+          Utils.memoized(
+            cache,
+            {:existing_keys, existing_keys_hash, batch_amount, common_rand_seed},
+            fn ->
+              existing_keys(
+                input_wrapper.existing_keys_tuple,
+                common_rand_seed,
+                batch_amount
+              )
+            end
+          )
+
+        {[input_variant, keys], cache}
 
       :existing_and_unique ->
         assert input_wrapper.n !== 0
-        [input_variant, existing_keys_unique(
-          input_wrapper.existing_keys_tuple, common_rand_seed, batch_amount
-        )]
+
+        {keys, cache} =
+          Utils.memoized(
+            cache,
+            {:existing_keys_unique, existing_keys_hash, batch_amount, common_rand_seed},
+            fn ->
+              existing_keys_unique(
+                input_wrapper.existing_keys_tuple,
+                common_rand_seed,
+                batch_amount
+              )
+            end
+          )
+
+        {[input_variant, keys], cache}
 
       :missing ->
-        [input_variant, missing_keys(
-          input_wrapper.existing_keys_set, common_rand_seed, batch_amount
-        )]
+        {keys, cache} =
+          Utils.memoized(
+            cache,
+            {:missing_keys, existing_keys_hash, batch_amount, common_rand_seed},
+            fn ->
+              missing_keys(
+                input_wrapper.existing_keys_set,
+                common_rand_seed,
+                batch_amount
+              )
+            end
+          )
+
+        {[input_variant, keys], cache}
 
       :missing_and_unique ->
-        [input_variant, missing_keys_unique(
-          input_wrapper.existing_keys_set, common_rand_seed, batch_amount
-        )]
+        {keys, cache} =
+          Utils.memoized(
+            cache,
+            {:missing_keys_unique, existing_keys_hash, batch_amount, common_rand_seed},
+            fn ->
+              missing_keys_unique(
+                input_wrapper.existing_keys_set,
+                common_rand_seed,
+                batch_amount
+              )
+            end
+          )
+
+        {[input_variant, keys], cache}
     end
   end
 
@@ -320,7 +468,8 @@ defmodule Xb5Benchmark.Cases do
     Enum.map(key_indices, &existing_key(existing_keys_tuple, common_rand_seed, &1))
   end
 
-  defp existing_keys_unique(existing_keys_tuple, common_rand_seed, amount) when amount <= tuple_size(existing_keys_tuple) do
+  defp existing_keys_unique(existing_keys_tuple, common_rand_seed, amount)
+       when amount <= tuple_size(existing_keys_tuple) do
     [seed_part1 | seed_part2] = common_rand_seed
     rand_seed = {seed_part1, seed_part2, 0}
     existing_keys_tuple |> Tuple.to_list() |> Utils.take_random_with_seed(amount, rand_seed)
@@ -332,7 +481,8 @@ defmodule Xb5Benchmark.Cases do
     missing_keys_recur(initial_keys_set, common_rand_seed, 0, amount)
   end
 
-  defp missing_keys_recur(initial_keys_set, common_rand_seed, key_index, amount) when amount > 0 do
+  defp missing_keys_recur(initial_keys_set, common_rand_seed, key_index, amount)
+       when amount > 0 do
     key = missing_key(initial_keys_set, common_rand_seed, key_index)
     [key | missing_keys_recur(initial_keys_set, common_rand_seed, key_index + 1, amount - 1)]
   end
@@ -347,10 +497,15 @@ defmodule Xb5Benchmark.Cases do
     missing_keys_unique_recur(existing_keys_set, common_rand_seed, 0, amount)
   end
 
-  defp missing_keys_unique_recur(existing_keys_set, common_rand_seed, key_index, amount) when amount > 0 do
+  defp missing_keys_unique_recur(existing_keys_set, common_rand_seed, key_index, amount)
+       when amount > 0 do
     key = missing_key(existing_keys_set, common_rand_seed, key_index)
     existing_keys_set = MapSet.put(existing_keys_set, key)
-    [key | missing_keys_unique_recur(existing_keys_set, common_rand_seed, key_index + 1, amount - 1)]
+
+    [
+      key
+      | missing_keys_unique_recur(existing_keys_set, common_rand_seed, key_index + 1, amount - 1)
+    ]
   end
 
   defp missing_keys_unique_recur(_existing_keys_set, _, _, 0) do
@@ -360,54 +515,106 @@ defmodule Xb5Benchmark.Cases do
   #########
 
   defp new_second_collection_case(
-    %Group{} = group, %InputStructures.Wrapper{} = input_wrapper, max_perc_in_common, size2
-  ) do
+         %Group{} = group,
+         %InputStructures.Wrapper{} = input_wrapper,
+         cache,
+         max_perc_in_common,
+         size2
+       ) do
     assert group.tweaks === :none
 
     fun = group.suite_fun
 
     rand_seed_part1 = :erlang.phash2(group.id)
 
-    iterations =
-      Enum.with_index(
-        input_wrapper.variants,
-        fn variant, iteration_index ->
+    {iterations, cache} =
+      input_wrapper.variants
+      |> Enum.with_index()
+      |> Enum.flat_map_reduce(
+        cache,
+        fn {variant, iteration_index}, cache ->
           common_rand_seed = [rand_seed_part1 | iteration_index]
-          second_collection_iteration(variant, input_wrapper, max_perc_in_common, size2, common_rand_seed)
-        end)
-        |> Enum.flat_map(&(&1))
+
+          second_collection_iteration(
+            variant,
+            input_wrapper,
+            max_perc_in_common,
+            size2,
+            common_rand_seed,
+            cache
+          )
+        end
+      )
 
     fun_arg = {:single, iterations}
 
-    %Case{
-      n: input_wrapper.n,
-      build_type: input_wrapper.build_type,
-      suite: input_wrapper.suite,
-      group: group,
-      fun: fun,
-      fun_arg: fun_arg
-    }
+    c =
+      %Case{
+        n: input_wrapper.n,
+        build_type: input_wrapper.build_type,
+        suite: input_wrapper.suite,
+        group: group,
+        fun: fun,
+        fun_arg: fun_arg
+      }
+
+    {c, cache}
   end
 
   defp second_collection_iteration(
-    variant, %InputStructures.Wrapper{} = input_wrapper, max_perc_in_common, size2, common_rand_seed
-  ) do
+         variant,
+         %InputStructures.Wrapper{} = input_wrapper,
+         max_perc_in_common,
+         size2,
+         common_rand_seed,
+         cache
+       ) do
     impl_mod = input_wrapper.impl_mod
 
-    {resolved_max_perc_in_common, common_keys_direction} = second_collection_resolve_max_perc_in_common(max_perc_in_common)
+    {resolved_max_perc_in_common, common_keys_direction} =
+      second_collection_resolve_max_perc_in_common(max_perc_in_common)
+
     resolved_size2 = second_collection_resolve_size2(input_wrapper.n, size2)
 
     amount_in_common = floor(resolved_max_perc_in_common * min(resolved_size2, input_wrapper.n))
-    {new_keys_constraint, keys_in_common} = second_collection_keys_in_common(
-      input_wrapper, common_keys_direction, amount_in_common, common_rand_seed
-    )
 
-    coll2 = InputStructures.new_second_collection(
-      input_wrapper.build_type, resolved_size2, impl_mod, input_wrapper.existing_keys_set, 
-      new_keys_constraint, keys_in_common, common_rand_seed
-    )
+    existing_keys_hash = :erlang.phash2(input_wrapper.existing_keys_list)
+
+    {{new_keys_constraint, keys_in_common}, cache} =
+      Utils.memoized(
+        cache,
+        {
+          :second_collection_keys_in_common,
+          existing_keys_hash,
+          resolved_max_perc_in_common,
+          common_keys_direction,
+          amount_in_common,
+          common_rand_seed
+        },
+        fn ->
+          second_collection_keys_in_common(
+            input_wrapper,
+            common_keys_direction,
+            amount_in_common,
+            common_rand_seed
+          )
+        end
+      )
+
+    {coll2, cache} =
+      InputStructures.new_second_collection(
+        input_wrapper.build_type,
+        resolved_size2,
+        impl_mod,
+        input_wrapper.existing_keys_set,
+        new_keys_constraint,
+        keys_in_common,
+        common_rand_seed,
+        cache
+      )
+
     assert impl_mod.size(coll2) === resolved_size2
-    [variant, coll2]
+    {[variant, coll2], cache}
   end
 
   ##
@@ -426,14 +633,22 @@ defmodule Xb5Benchmark.Cases do
   defp second_collection_resolve_size2(_n, size2), do: size2
 
   defp second_collection_keys_in_common(
-    %InputStructures.Wrapper{} = input_wrapper, common_keys_direction, amount_in_common, [seed_part1 | seed_part2]
-  ) do
+         %InputStructures.Wrapper{} = input_wrapper,
+         common_keys_direction,
+         amount_in_common,
+         [seed_part1 | seed_part2]
+       ) do
     case common_keys_direction do
       :random_keys ->
         new_keys_constraint = :none
+
         {
           new_keys_constraint,
-          Utils.take_random_with_seed(input_wrapper.existing_keys_list, amount_in_common, {seed_part1, seed_part2, 42})
+          Utils.take_random_with_seed(
+            input_wrapper.existing_keys_list,
+            amount_in_common,
+            {seed_part1, seed_part2, 42}
+          )
         }
 
       #####
@@ -463,7 +678,6 @@ defmodule Xb5Benchmark.Cases do
           end
 
         {new_keys_constraint, keys_in_common}
-
     end
   end
 end

@@ -16,6 +16,7 @@ defmodule Xb5Benchmark do
 
   def run(output_dir, opts \\ []) do
     File.mkdir_p!(output_dir)
+    write_system_info!(output_dir)
 
     build_types = opts[:build_types] || InputStructures.all_build_types()
 
@@ -30,13 +31,20 @@ defmodule Xb5Benchmark do
     end
 
     Logger.notice("Merging output into CSV...")
-    merge(output_dir, :runtime)
+    merge_into_csv(output_dir, :runtime)
   end
 
-  def merge(output_dir, name) do
+  defp write_system_info!(output_dir) do
+    system_info = %Benchee.System{} = Benchee.System.system(%Benchee.Suite{}).system
+    json = Jason.encode!(Map.from_struct(system_info), pretty: true)
+    path = Path.join(output_dir, "system_info.json")
+    File.write!(path, json)
+  end
+
+  defp merge_into_csv(output_dir, name) do
     json_paths = Path.wildcard(Path.join([output_dir, "*", "*", "#{name}", "*.json"]))
 
-    merged_rows = 
+    merged_rows =
       json_paths
       |> Enum.map(&File.read!/1)
       |> Enum.map(&Jason.decode!/1)
@@ -45,7 +53,7 @@ defmodule Xb5Benchmark do
 
     csv_headers = collect_csv_headers(merged_rows)
 
-    csv_rows = 
+    csv_rows =
       merged_rows
       |> Enum.map(&build_csv_row(&1, csv_headers))
 
@@ -53,7 +61,6 @@ defmodule Xb5Benchmark do
     csv = csv_output([csv_headers | csv_rows])
     File.write!(csv_path, csv)
   end
-
 
   #####
 
@@ -67,13 +74,12 @@ defmodule Xb5Benchmark do
 
     json_measurements =
       collector.results_per_n
-      |> Enum.map(
-        fn {n, %Runner.ResultsForSize{} = results_for_size} ->
-          [latest_stats | _] = results_for_size.stats_history
-          {n, latest_stats}
-        end)
-        |> Enum.sort_by(&elem(&1, 0))
-        |> Enum.map(&json_raw_stats/1)
+      |> Enum.map(fn {n, %Runner.ResultsForSize{} = results_for_size} ->
+        [latest_stats | _] = results_for_size.stats_history
+        {n, latest_stats}
+      end)
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.map(&json_raw_stats/1)
 
     #####
 
@@ -89,10 +95,14 @@ defmodule Xb5Benchmark do
 
     #####
 
-    group_output_dir = Path.join([output_dir, "build_#{collector.build_type}", "#{group.impl_mod}", "#{name}"])
+    group_output_dir =
+      Path.join([output_dir, "build_#{collector.build_type}", "#{group.impl_mod}", "#{name}"])
+
     File.mkdir_p!(group_output_dir)
 
-    group_output_path = Path.join(group_output_dir, "#{group_output_file_basename(group.id)}.json")
+    group_output_path =
+      Path.join(group_output_dir, "#{group_output_file_basename(group.id)}.json")
+
     File.write!(group_output_path, Jason.encode!(json_output, pretty: true))
   end
 
@@ -108,7 +118,8 @@ defmodule Xb5Benchmark do
     Map.put(map, :n, n)
   end
 
-  defp raw_stats_case_group_tweaks({tag, value}) when is_atom(tag) and (is_atom(value) or is_number(value)) do
+  defp raw_stats_case_group_tweaks({tag, value})
+       when is_atom(tag) and (is_atom(value) or is_number(value)) do
     [tag, value]
   end
 
@@ -119,25 +130,74 @@ defmodule Xb5Benchmark do
   #####
 
   defp merged_stats_rows(%{
-    "build_type" => build_type_str, 
-    "group_id" => group_id_str,
-    "impl_description" => impl_description,
-    "measurements" => measurements
-  }) do
+         "build_type" => build_type_str,
+         "group_id" => group_id_str,
+         "impl_description" => impl_description,
+         "measurements" => measurements
+       }) do
     rev_measurements = Enum.reverse(measurements)
 
     [
-      merged_stats_row(build_type_str, group_id_str, impl_description, rev_measurements, "average", "average"),
+      merged_stats_row(
+        build_type_str,
+        group_id_str,
+        impl_description,
+        rev_measurements,
+        "average",
+        "average"
+      ),
       # Five-number summary
-      merged_stats_row(build_type_str, group_id_str, impl_description, rev_measurements, "minimum", "minimum"),
-      merged_stats_row(build_type_str, group_id_str, impl_description, rev_measurements, "25th_percentile", ["percentiles", "25"]),
-      merged_stats_row(build_type_str, group_id_str, impl_description, rev_measurements, "median", "median"),
-      merged_stats_row(build_type_str, group_id_str, impl_description, rev_measurements, "75th_percentile", ["percentiles", "75"]),
-      merged_stats_row(build_type_str, group_id_str, impl_description, rev_measurements, "maximum", "maximum")
+      merged_stats_row(
+        build_type_str,
+        group_id_str,
+        impl_description,
+        rev_measurements,
+        "minimum",
+        "minimum"
+      ),
+      merged_stats_row(
+        build_type_str,
+        group_id_str,
+        impl_description,
+        rev_measurements,
+        "25th_percentile",
+        ["percentiles", "25"]
+      ),
+      merged_stats_row(
+        build_type_str,
+        group_id_str,
+        impl_description,
+        rev_measurements,
+        "median",
+        "median"
+      ),
+      merged_stats_row(
+        build_type_str,
+        group_id_str,
+        impl_description,
+        rev_measurements,
+        "75th_percentile",
+        ["percentiles", "75"]
+      ),
+      merged_stats_row(
+        build_type_str,
+        group_id_str,
+        impl_description,
+        rev_measurements,
+        "maximum",
+        "maximum"
+      )
     ]
   end
 
-  defp merged_stats_row(build_type_str, group_id_str, impl_description, rev_measurements, measurement_id, json_path) do
+  defp merged_stats_row(
+         build_type_str,
+         group_id_str,
+         impl_description,
+         rev_measurements,
+         measurement_id,
+         json_path
+       ) do
     [
       {"build_type", build_type_str},
       {"group_id", group_id_str},
@@ -195,7 +255,7 @@ defmodule Xb5Benchmark do
 
   defp collect_csv_headers(merged_rows) do
     merged_rows
-    |> Enum.sort_by(&(List.keymember?(&1, "0", 0)), :desc)
+    |> Enum.sort_by(&List.keymember?(&1, "0", 0), :desc)
     |> Enum.reduce(%{}, &collect_row_csv_keys/2)
     |> Enum.sort_by(fn {_key, order} -> order end)
     |> Enum.map(fn {key, _order} -> key end)
@@ -225,7 +285,8 @@ defmodule Xb5Benchmark do
           _ ->
             ""
         end
-      end)
+      end
+    )
   end
 
   defp csv_output(rows) do

@@ -34,7 +34,9 @@ defmodule Xb5Benchmark.CollectionWrapper do
   @callback coll_lookup(key, t) :: term
   @callback coll_map(t) :: term
   @callback coll_next_and_discard(iterator) :: :done | iterator
-  #@callback coll_size(t) :: non_neg_integer
+  @callback coll_nth(pos_integer, t) :: term
+  @callback coll_rank_and_discard(key, t) :: term
+  # @callback coll_size(t) :: non_neg_integer
   @callback coll_smaller(key, t) :: term
   @callback coll_smallest(t) :: term
   @callback coll_take_and_discard(key, t) :: t
@@ -46,7 +48,7 @@ defmodule Xb5Benchmark.CollectionWrapper do
   @callback coll_update(key, t) :: t
   @callback coll_values(t) :: [value]
 
-  @callback coll_api_name(atom) :: String.t
+  @callback coll_api_name(atom) :: String.t()
 
   @optional_callbacks [
     coll_difference: 2,
@@ -64,6 +66,8 @@ defmodule Xb5Benchmark.CollectionWrapper do
     coll_is_subset: 2,
     coll_keys: 1,
     coll_lookup: 2,
+    coll_nth: 2,
+    coll_rank_and_discard: 2,
     coll_take_and_discard: 2,
     coll_take_any_and_discard: 2,
     coll_union: 2,
