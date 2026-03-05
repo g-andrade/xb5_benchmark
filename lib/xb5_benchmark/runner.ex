@@ -426,16 +426,12 @@ defmodule Xb5Benchmark.Runner do
     min(stable_count, @min_stable_count_per_stats)
   end
 
-  defp stats_plateaus([%Statistex{}]) do
-    []
-  end
-
-  defp stats_plateaus([%Statistex{} = stats2, %Statistex{} = stats1]) do
-    [stats_plateau_measurement(stats1, stats2)]
-  end
-
   defp stats_plateaus([%Statistex{} = stats2 | [%Statistex{} = stats1 | _] = next]) do
     [stats_plateau_measurement(stats1, stats2) | stats_plateaus(next)]
+  end
+
+  defp stats_plateaus(_) do
+    []
   end
 
   defp stats_plateau_measurement(%Statistex{} = stats1, %Statistex{} = stats2) do
