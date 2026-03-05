@@ -99,6 +99,7 @@ defmodule Xb5Benchmark do
       group_id: group.id,
       impl_description: group.impl_description,
       tweaks: raw_stats_case_group_tweaks(group.tweaks),
+      timestamp: DateTime.to_iso8601(DateTime.utc_now()),
       measurements: json_measurements
     }
 
@@ -142,6 +143,7 @@ defmodule Xb5Benchmark do
          "build_type" => build_type_str,
          "group_id" => group_id_str,
          "impl_description" => impl_description,
+         "timestamp" => timestamp,
          "measurements" => measurements
        }) do
     rev_measurements = Enum.reverse(measurements)
@@ -151,6 +153,7 @@ defmodule Xb5Benchmark do
         build_type_str,
         group_id_str,
         impl_description,
+        timestamp,
         rev_measurements,
         "average",
         "average"
@@ -160,6 +163,7 @@ defmodule Xb5Benchmark do
         build_type_str,
         group_id_str,
         impl_description,
+        timestamp,
         rev_measurements,
         "minimum",
         "minimum"
@@ -168,6 +172,7 @@ defmodule Xb5Benchmark do
         build_type_str,
         group_id_str,
         impl_description,
+        timestamp,
         rev_measurements,
         "25th_percentile",
         ["percentiles", "25"]
@@ -176,6 +181,7 @@ defmodule Xb5Benchmark do
         build_type_str,
         group_id_str,
         impl_description,
+        timestamp,
         rev_measurements,
         "median",
         "median"
@@ -184,6 +190,7 @@ defmodule Xb5Benchmark do
         build_type_str,
         group_id_str,
         impl_description,
+        timestamp,
         rev_measurements,
         "75th_percentile",
         ["percentiles", "75"]
@@ -192,6 +199,7 @@ defmodule Xb5Benchmark do
         build_type_str,
         group_id_str,
         impl_description,
+        timestamp,
         rev_measurements,
         "maximum",
         "maximum"
@@ -203,6 +211,7 @@ defmodule Xb5Benchmark do
          build_type_str,
          group_id_str,
          impl_description,
+         timestamp,
          rev_measurements,
          measurement_id,
          json_path
@@ -211,7 +220,8 @@ defmodule Xb5Benchmark do
       {"build_type", build_type_str},
       {"group_id", group_id_str},
       {"measurement_name", measurement_id},
-      {"impl_description", impl_description}
+      {"impl_description", impl_description},
+      {"timestamp", timestamp}
       | Enum.reduce(rev_measurements, [], &merge_measurement(&2, &1, json_path))
     ]
   end
