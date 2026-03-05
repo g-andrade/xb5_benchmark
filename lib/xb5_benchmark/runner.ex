@@ -6,7 +6,6 @@ defmodule Xb5Benchmark.Runner do
 
   alias Xb5Benchmark.Cases.Case
   alias Xb5Benchmark.Groups.Group
-  alias Xb5Benchmark.Utils
 
   # import ExUnit.Assertions
 
@@ -16,7 +15,7 @@ defmodule Xb5Benchmark.Runner do
 
   @min_stable_count_per_stats 4
 
-  @batch_interval_seconds 60
+  @batch_interval_seconds 120
 
   ## Types
 

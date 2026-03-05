@@ -91,7 +91,14 @@ defmodule Xb5Benchmark.InputStructures do
       ) do
     [seed_part1 | seed_part2] = common_rand_seed
 
-    new_amount = size - length(keys_in_common)
+    build_type_adjusted_size =
+      if build_type === :xb5_adversarial do
+        size + div(size, 4)
+      else
+        size
+      end
+
+    new_amount = build_type_adjusted_size - length(keys_in_common)
     assert new_amount >= 0
 
     {new_keys, cache} =
@@ -117,7 +124,7 @@ defmodule Xb5Benchmark.InputStructures do
       )
 
     initial_keys = Enum.sort(keys_in_common ++ new_keys)
-    assert length(initial_keys) === size
+    # assert length(initial_keys) === size
 
     _ =
       case new_keys_constraint do
@@ -137,6 +144,8 @@ defmodule Xb5Benchmark.InputStructures do
 
     collection =
       new_input_structure_candidate(build_type, size, initial_keys, impl_mod, pseudo_candidate_id)
+
+    assert impl_mod.size(collection) === size
 
     {collection, cache}
   end
