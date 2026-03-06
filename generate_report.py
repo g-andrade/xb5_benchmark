@@ -46,7 +46,7 @@ def render(data):
     stripped = strip_data(data)
     escaped  = json.dumps(stripped, separators=(",", ":")).replace("</", "<\\/")
     cpu   = shorten_cpu(data.get("system_info", {}).get("cpu_speed", "Unknown CPU"))
-    title = json.dumps(f"xb5 \u2013 {cpu}")
+    title = json.dumps(f"xb5 - {cpu}")
     return TEMPLATE.replace("/*__DATA__*/", escaped).replace("/*__TITLE__*/", title)
 
 
@@ -415,8 +415,8 @@ function hashToState(hash) {
 
 function stateTitle(s) {
   var sec  = SECTIONS[s.si];
-  var base = PAGE_TITLE + ' \u2014 ' + sec.label;
-  return s.fi === -1 ? base + ' \u2014 Overview' : base + ' \u2014 ' + sec.families[s.fi].label;
+  var base = PAGE_TITLE + ' - ' + sec.label;
+  return s.fi === -1 ? base + ' - Overview' : base + ' - ' + sec.families[s.fi].label;
 }
 
 function pushHistory() {
@@ -545,7 +545,7 @@ function computeRatio(fam, buildType, primary, baseline) {
 // Proportional display: "130%" means xb5 is 130% as fast as baseline (i.e. 30% faster).
 // "78%" means xb5 is only 78% as fast (22% slower).
 function ratioHtml(ratio) {
-  if (ratio === null) return '<span class="r-na">\u2014</span>';
+  if (ratio === null) return '<span class="r-na">-</span>';
   var pct = Math.round(ratio * 100);
   var cls;
   if (state.metric === 'runtime') {
@@ -733,7 +733,7 @@ function populateOpSelect() {
   sel.innerHTML = '';
 
   var opt0 = document.createElement('option');
-  opt0.value = -1; opt0.textContent = '\u2014 Overview \u2014';
+  opt0.value = -1; opt0.textContent = '- Overview -';
   sel.appendChild(opt0);
 
   // Sort families alphabetically (case-insensitive) for the dropdown,
@@ -927,11 +927,11 @@ function renderFamily(si, fi) {
     '<div class="detail-subtitle">' + sec.label + '  \u00b7  ' + BUILD_LABELS[state.buildType] + '</div>' +
     tweakNote(entries) +
     ctrlHtml +
-    '<div class="chart-lbl">Performance \u2014 median with p25\u2013p75 band</div>' +
+    '<div class="chart-lbl">Performance - median with p25\u2013p75 band</div>' +
     '<div class="chart-box" id="main-chart"></div>' +
     (hasComp
       ? '<div class="chart-lbl">' + pctLbl + '</div><div class="pct-box" id="pct-chart"></div>'
-      : '<div style="font-size:12px;color:#888;margin-top:10px;">Bag-exclusive \u2014 no baseline comparison.</div>') +
+      : '<div style="font-size:12px;color:#888;margin-top:10px;">Bag-exclusive - no baseline comparison.</div>') +
     '</div>';
 
   document.getElementById('back-btn').onclick = function() {
