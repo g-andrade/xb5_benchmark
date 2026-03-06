@@ -7,6 +7,7 @@ Usage:
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -30,10 +31,21 @@ def main():
     print(f"Report written to: {out}  ({new // 1024} KB, down from {orig // 1024} KB JSON)")
 
 
+def shorten_cpu(cpu):
+    """Trim trademark markers and redundant words from CPU strings.
+
+    'Intel(R) Core(TM) i5-3550 CPU @ 3.30GHz' -> 'Intel Core i5-3550 @ 3.30GHz'
+    """
+    cpu = re.sub(r'\(R\)|\(TM\)', '', cpu)
+    cpu = re.sub(r'\bCPU\b', '', cpu)
+    cpu = re.sub(r'  +', ' ', cpu).strip()
+    return cpu
+
+
 def render(data):
     stripped = strip_data(data)
     escaped  = json.dumps(stripped, separators=(",", ":")).replace("</", "<\\/")
-    cpu   = data.get("system_info", {}).get("cpu_speed", "Unknown CPU")
+    cpu   = shorten_cpu(data.get("system_info", {}).get("cpu_speed", "Unknown CPU"))
     title = json.dumps(f"xb5 \u2013 {cpu}")
     return TEMPLATE.replace("/*__DATA__*/", escaped).replace("/*__TITLE__*/", title)
 
@@ -371,11 +383,47 @@ function getFsel(si, fi) {
 }
 
 // ============================================================
-// Browser history
+// Browser history & URL hash routing
 // ============================================================
 
+function stateToHash(s) {
+  var sec = SECTIONS[s.si];
+  var famPart = s.fi === -1 ? 'overview' : encodeURIComponent(sec.families[s.fi].id);
+  return '#' + sec.id + '/' + famPart + '/' + s.buildType + '/' + s.metric;
+}
+
+function hashToState(hash) {
+  if (!hash || hash.length < 2) return null;
+  var parts = hash.slice(1).split('/');
+  if (parts.length < 4) return null;
+  var si = SECTIONS.findIndex(function(s) { return s.id === parts[0]; });
+  if (si === -1) return null;
+  var famId = decodeURIComponent(parts[1]);
+  var fi;
+  if (famId === 'overview') {
+    fi = -1;
+  } else {
+    var fIdx = SECTIONS[si].families.findIndex(function(f) { return !f.div && f.id === famId; });
+    if (fIdx === -1) return null;
+    fi = fIdx;
+  }
+  var buildType = parts[2];
+  var metric    = parts[3];
+  if (!BUILD_LABELS[buildType] || (metric !== 'runtime' && metric !== 'memory')) return null;
+  return { si: si, fi: fi, buildType: buildType, metric: metric };
+}
+
+function stateTitle(s) {
+  var sec  = SECTIONS[s.si];
+  var base = PAGE_TITLE + ' \u2014 ' + sec.label;
+  return s.fi === -1 ? base + ' \u2014 Overview' : base + ' \u2014 ' + sec.families[s.fi].label;
+}
+
 function pushHistory() {
-  history.pushState({ si: state.si, fi: state.fi, buildType: state.buildType, metric: state.metric }, '');
+  var hash  = stateToHash(state);
+  var title = stateTitle(state);
+  document.title = title;
+  history.pushState({ si: state.si, fi: state.fi, buildType: state.buildType, metric: state.metric }, title, hash);
 }
 
 window.addEventListener('popstate', function(e) {
@@ -384,6 +432,7 @@ window.addEventListener('popstate', function(e) {
   state.fi        = e.state.fi;
   state.buildType = e.state.buildType;
   state.metric    = e.state.metric;
+  document.title  = stateTitle(state);
   document.getElementById('sel-section').value = state.si;
   document.getElementById('sel-build').value   = state.buildType;
   document.getElementById('sel-metric').value  = state.metric;
@@ -635,10 +684,23 @@ function buildPctChart(containerId, groupId, sec) {
 
   var bgColor = isRuntime ? 'white' : '#fdfbff';
 
+  // Green = good side of 100%, red = bad side (reversed for memory).
+  var yLo = minP - 5, yHi = maxP + 10;
+  var shapes = [
+    { type: 'rect', xref: 'paper', yref: 'y', layer: 'below', line: { width: 0 },
+      x0: 0, x1: 1,
+      y0: isRuntime ? 100 : yLo, y1: isRuntime ? yHi : 100,
+      fillcolor: 'rgba(46,125,50,0.10)' },
+    { type: 'rect', xref: 'paper', yref: 'y', layer: 'below', line: { width: 0 },
+      x0: 0, x1: 1,
+      y0: isRuntime ? yLo : 100, y1: isRuntime ? 100 : yHi,
+      fillcolor: 'rgba(198,40,40,0.08)' }
+  ];
+
   Plotly.newPlot(el, [
     { x: [plotN[0], plotN[plotN.length - 1]], y: [100, 100],
       type: 'scatter', mode: 'lines',
-      line: { dash: 'dot', color: '#bbb', width: 1 },
+      line: { dash: 'dot', color: '#888', width: 1.5 },
       showlegend: false, hoverinfo: 'skip' },
     { x: plotN, y: pcts,
       type: 'scatter', mode: 'lines+markers',
@@ -651,8 +713,9 @@ function buildPctChart(containerId, groupId, sec) {
     xaxis: { gridcolor: '#ebebeb' },
     yaxis: {
       title: yLabel, gridcolor: '#ebebeb', zeroline: false,
-      range: [minP - 5, maxP + 10], ticksuffix: '%'
+      range: [yLo, yHi], ticksuffix: '%'
     },
+    shapes: shapes,
     paper_bgcolor: bgColor, plot_bgcolor: bgColor,
     showlegend: false, hovermode: 'x'
   }, { responsive: true, displayModeBar: false });
@@ -705,8 +768,15 @@ function initControls() {
   });
   selSec.value = state.si;
   selSec.onchange = function() {
-    state.si = parseInt(selSec.value);
-    state.fi = -1;
+    var newSi = parseInt(selSec.value);
+    var newFi = -1;
+    if (state.fi !== -1) {
+      var curId = SECTIONS[state.si].families[state.fi].id;
+      var idx   = SECTIONS[newSi].families.findIndex(function(f) { return !f.div && f.id === curId; });
+      if (idx !== -1) newFi = idx;
+    }
+    state.si = newSi;
+    state.fi = newFi;
     populateOpSelect();
     pushHistory();
     rerender();
@@ -904,7 +974,6 @@ function rerender() {
 // ============================================================
 
 function init() {
-  document.title = PAGE_TITLE;
   document.getElementById('hdr-title').textContent = PAGE_TITLE;
   var si = DATA.system_info;
   document.getElementById('sysinfo').textContent =
@@ -912,9 +981,20 @@ function init() {
      si.num_cores + ' cores', si.available_memory,
      si['jit_enabled?'] ? 'JIT \u2713' : 'JIT \u2717'].join(' \u00b7 ');
 
+  var fromHash = hashToState(location.hash);
+  if (fromHash) {
+    state.si        = fromHash.si;
+    state.fi        = fromHash.fi;
+    state.buildType = fromHash.buildType;
+    state.metric    = fromHash.metric;
+  }
+
   initControls();
-  history.replaceState({ si: state.si, fi: state.fi, buildType: state.buildType, metric: state.metric }, '');
-  renderOverview();
+  var hash  = stateToHash(state);
+  var title = stateTitle(state);
+  document.title = title;
+  history.replaceState({ si: state.si, fi: state.fi, buildType: state.buildType, metric: state.metric }, title, hash);
+  rerender();
 }
 
 init();
