@@ -286,7 +286,8 @@ defmodule Xb5Benchmark.InputStructures do
       Suites.ErlGbTree,
       Suites.ErlXb5Bag,
       Suites.ErlXb5Set,
-      Suites.ErlXb5Tree
+      Suites.ErlXb5Tree,
+      Suites.ErlXb5TreeV2
     ]
   end
 
@@ -500,7 +501,7 @@ defmodule Xb5Benchmark.InputStructures do
 
   ##
 
-  defp impl_mod_insert(impl_mod, key, acc) when impl_mod in [:xb5_trees, :gb_trees] do
+  defp impl_mod_insert(impl_mod, key, acc) when impl_mod in [:xb5_trees, :xb5_trees_v2, :gb_trees] do
     impl_mod.insert(key, :value, acc)
   end
 
@@ -511,7 +512,7 @@ defmodule Xb5Benchmark.InputStructures do
   ##
 
   defp impl_mod_from_ordset_or_orddict(impl_mod, initial_keys)
-       when impl_mod in [:xb5_trees, :gb_trees] do
+       when impl_mod in [:xb5_trees, :xb5_trees_v2, :gb_trees] do
     initial_keys
     |> Enum.map(&{&1, :value})
     |> impl_mod.from_orddict()
@@ -523,7 +524,7 @@ defmodule Xb5Benchmark.InputStructures do
 
   ###############
 
-  defp impl_mod_keys(impl_mod, tree) when impl_mod in [:xb5_trees, :gb_trees] do
+  defp impl_mod_keys(impl_mod, tree) when impl_mod in [:xb5_trees, :xb5_trees_v2, :gb_trees] do
     impl_mod.keys(tree)
   end
 

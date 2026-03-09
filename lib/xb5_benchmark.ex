@@ -35,6 +35,27 @@ defmodule Xb5Benchmark do
     merge_into_csv(output_dir, :memory)
   end
 
+  def merge_into_csv(output_dir, name) do
+    json_paths = Path.wildcard(Path.join([output_dir, "*", "*", "#{name}", "*.json"]))
+
+    merged_rows =
+      json_paths
+      |> Enum.map(&File.read!/1)
+      |> Enum.map(&Jason.decode!/1)
+      |> Enum.flat_map(&merged_stats_rows/1)
+      |> Enum.sort_by(&merged_stats_row_order/1)
+
+    csv_headers = collect_csv_headers(merged_rows)
+
+    csv_rows =
+      merged_rows
+      |> Enum.map(&build_csv_row(&1, csv_headers))
+
+    csv_path = Path.join(output_dir, "stats_#{name}.csv")
+    csv = csv_output([csv_headers | csv_rows])
+    File.write!(csv_path, csv)
+  end
+
   def merge_into_single_json(output_dir) do
     system_info =
       output_dir
@@ -89,27 +110,6 @@ defmodule Xb5Benchmark do
     json = Jason.encode!(Map.from_struct(system_info), pretty: true)
     path = Path.join(output_dir, "system_info.json")
     File.write!(path, json)
-  end
-
-  defp merge_into_csv(output_dir, name) do
-    json_paths = Path.wildcard(Path.join([output_dir, "*", "*", "#{name}", "*.json"]))
-
-    merged_rows =
-      json_paths
-      |> Enum.map(&File.read!/1)
-      |> Enum.map(&Jason.decode!/1)
-      |> Enum.flat_map(&merged_stats_rows/1)
-      |> Enum.sort_by(&merged_stats_row_order/1)
-
-    csv_headers = collect_csv_headers(merged_rows)
-
-    csv_rows =
-      merged_rows
-      |> Enum.map(&build_csv_row(&1, csv_headers))
-
-    csv_path = Path.join(output_dir, "stats_#{name}.csv")
-    csv = csv_output([csv_headers | csv_rows])
-    File.write!(csv_path, csv)
   end
 
   #####
