@@ -122,6 +122,7 @@ body {
 #main { flex: 1; overflow-y: auto; padding: 20px 24px; background: #f0f2f5; }
 /* ---- Overview ---- */
 .ov-header { font-size: 12px; color: #888; margin-bottom: 10px; }
+.ov-th-n { display: block; font-size: 10px; font-weight: normal; color: #aaa; margin-top: 2px; }
 .ov-table {
   border-collapse: collapse; background: #fff; width: 100%; max-width: 480px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 6px; overflow: hidden;
@@ -184,10 +185,6 @@ body {
 }
 .chart-box { width: 100%; height: 400px; }
 .pct-box   { width: 100%; height: 220px; }
-.tweak-note {
-  display: inline-block; font-size: 11px; background: #fff3e0; color: #e65100;
-  border-radius: 4px; padding: 2px 8px; margin-bottom: 12px; font-weight: 500;
-}
 .no-data { color: #aaa; font-style: italic; padding: 16px 0; }
 </style>
 </head>
@@ -537,8 +534,8 @@ function computeRatio(fam, buildType, primary, baseline) {
   var eb = entries.find(function(e) { return e.impl_mod === baseline; });
   if (!ep || !eb) return null;
   var allN = getAllN();
-  var vp = getValAt(ep.measurements, allN[allN.length - 1], 'median');
-  var vb = getValAt(eb.measurements, allN[allN.length - 1], 'median');
+  var vp = getValAt(ep.measurements, 1000, 'median');
+  var vb = getValAt(eb.measurements, 1000, 'median');
   return (vp && vb) ? vp / vb : null;
 }
 
@@ -564,16 +561,6 @@ function ratioHtml(ratio) {
     else                   cls = 'r-worse';
   }
   return '<span class="r-chip ' + cls + '">' + pct + '%</span>';
-}
-
-function tweakNote(entries) {
-  for (var i = 0; i < entries.length; i++) {
-    var tw = entries[i].tweaks;
-    if (tw && tw !== 'none') {
-      return '<span class="tweak-note">tweaks: ' + (Array.isArray(tw) ? tw.join(', ') : tw) + '</span>';
-    }
-  }
-  return '';
 }
 
 // ============================================================
@@ -678,10 +665,6 @@ function buildPctChart(containerId, groupId, sec) {
       : (p < 97  ? '#2e7d32' : p > 103 ? '#c62828' : '#888');
   });
 
-  var yLabel = isRuntime
-    ? sec.primary + ' as % of ' + sec.baseline + ' speed'
-    : sec.primary + ' as % of ' + sec.baseline + ' memory';
-
   var bgColor = isRuntime ? 'white' : '#fdfbff';
 
   // Green = good side of 100%, red = bad side (reversed for memory).
@@ -709,10 +692,10 @@ function buildPctChart(containerId, groupId, sec) {
       marker: { size: 6, color: dotColors },
       hovertemplate: '%{y:.1f}%<br>n=%{x}<extra></extra>' }
   ], {
-    margin: { t: 8, r: 16, b: 40, l: 72 },
+    margin: { t: 8, r: 16, b: 40, l: 50 },
     xaxis: { gridcolor: '#ebebeb' },
     yaxis: {
-      title: yLabel, gridcolor: '#ebebeb', zeroline: false,
+      gridcolor: '#ebebeb', zeroline: false,
       range: [yLo, yHi], ticksuffix: '%'
     },
     shapes: shapes,
@@ -813,16 +796,14 @@ function renderOverview() {
   syncControls();
 
   var sec     = SECTIONS[state.si];
-  var allN    = getAllN();
-  var maxN    = allN[allN.length - 1];
   var isRuntime = state.metric === 'runtime';
-  var metricLbl = (isRuntime ? 'Speed ratio' : 'Memory ratio') + ' at n=' + maxN;
+  var metricLbl = isRuntime ? 'Speed ratio' : 'Memory ratio';
   var dirNote   = isRuntime ? '> 100% = xb5 faster' : '< 100% = xb5 uses less';
 
-  var h = '<div class="ov-header">' + metricLbl + '  \u00b7  ' +
-          BUILD_LABELS[state.buildType] + '  \u00b7  ' + dirNote + '</div>';
+  var h = '<div class="ov-header">' + metricLbl + '  \u00b7  ' + BUILD_LABELS[state.buildType] + '  \u00b7  ' + dirNote + '</div>';
   h += '<table class="ov-table"><thead><tr>';
-  h += '<th>Operation</th><th>' + sec.primary + ' vs ' + sec.baseline + '</th>';
+  h += '<th>Operation</th><th><span style="color:#444">' + sec.primary + '</span> vs <span style="color:#444">' + sec.baseline + '</span>' +
+       '<span class="ov-th-n">at n=1000</span></th>';
   h += '</tr></thead><tbody>';
 
   // Collect into sub-groups, sort within each, then emit with dividers intact.
@@ -914,8 +895,8 @@ function renderFamily(si, fi) {
   }
 
   var pctLbl = isRuntime
-    ? sec.primary + ' as % of ' + sec.baseline + ' speed (100% = same, >100% = xb5 faster)'
-    : sec.primary + ' as % of ' + sec.baseline + ' memory (100% = same, <100% = xb5 uses less)';
+    ? '<span style="color:#666">' + sec.primary + '</span> as % of <span style="color:#666">' + sec.baseline + '</span> speed (100% = same, >100% = xb5 faster)'
+    : '<span style="color:#666">' + sec.primary + '</span> as % of <span style="color:#666">' + sec.baseline + '</span> memory (100% = same, <100% = xb5 uses less)';
 
   var memClass = isRuntime ? '' : ' memory-mode';
 
@@ -924,13 +905,12 @@ function renderFamily(si, fi) {
     '<span class="back-btn" id="back-btn">\u2190 Overview</span>' +
     '<h2>' + fam.label + '</h2>' +
     '<div class="detail-gid">' + (gid || fam.id) + '</div>' +
-    '<div class="detail-subtitle">' + sec.label + '  \u00b7  ' + BUILD_LABELS[state.buildType] + '</div>' +
-    tweakNote(entries) +
+    '<div class="detail-subtitle">' + sec.label.replace(sec.primary, '<b style="color:#555">' + sec.primary + '</b>').replace(sec.baseline, '<b style="color:#555">' + sec.baseline + '</b>') + '  \u00b7  ' + BUILD_LABELS[state.buildType] + '</div>' +
     ctrlHtml +
     '<div class="chart-lbl">Performance - median with p25\u2013p75 band</div>' +
     '<div class="chart-box" id="main-chart"></div>' +
     (hasComp
-      ? '<div class="chart-lbl">' + pctLbl + '</div><div class="pct-box" id="pct-chart"></div>'
+      ? '<hr style="border:none;border-top:1px solid #e0e0e0;margin:20px 0 4px"><div class="chart-lbl">' + pctLbl + '</div><div class="pct-box" id="pct-chart"></div>'
       : '<div style="font-size:12px;color:#888;margin-top:10px;">Bag-exclusive - no baseline comparison.</div>') +
     '</div>';
 
