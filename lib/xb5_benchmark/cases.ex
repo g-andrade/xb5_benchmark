@@ -104,13 +104,11 @@ defmodule Xb5Benchmark.Cases do
 
   defp get_groups() do
     [
-      ## FIXME
-      #Suites.ErlGbSet,
-      #Suites.ErlGbTree,
-      #Suites.ErlXb5Bag,
-      #Suites.ErlXb5Set,
-      Suites.ErlXb5Tree,
-      Suites.ErlXb5TreeV2
+      Suites.ErlGbSet,
+      Suites.ErlGbTree,
+      Suites.ErlXb5Bag,
+      Suites.ErlXb5Set,
+      Suites.ErlXb5Tree
     ]
     |> Enum.flat_map(& &1.groups())
   end

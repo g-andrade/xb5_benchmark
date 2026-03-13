@@ -27,8 +27,4 @@ defmodule Xb5Benchmark.Suites do
   defmodule ErlXb5Tree do
     use Suite, wrapper_mod: ErlangTree, coll_mod: :xb5_trees
   end
-
-  defmodule ErlXb5TreeV2 do
-    use Suite, wrapper_mod: ErlangTree, coll_mod: :xb5_trees_v2
-  end
 end

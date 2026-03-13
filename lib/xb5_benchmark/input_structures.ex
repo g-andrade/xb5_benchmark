@@ -286,8 +286,7 @@ defmodule Xb5Benchmark.InputStructures do
       Suites.ErlGbTree,
       Suites.ErlXb5Bag,
       Suites.ErlXb5Set,
-      Suites.ErlXb5Tree,
-      Suites.ErlXb5TreeV2
+      Suites.ErlXb5Tree
     ]
   end
 

@@ -66,15 +66,12 @@ defmodule Xb5Benchmark do
     {runtime_data, runtime_n_values} = get_merged_data(output_dir, :runtime)
     {memory_data, memory_n_values} = get_merged_data(output_dir, :memory)
 
-    # FIXME
-    pretty? = true
-
     merged_json = Jason.encode!(%{
       system_info: system_info,
       n_values: :lists.usort(runtime_n_values ++ memory_n_values),
       runtime_data: runtime_data,
       memory_data: memory_data
-    }, pretty: pretty?)
+    }, pretty: true)
 
     output_dir
     |> Path.join("merged_data.json")
