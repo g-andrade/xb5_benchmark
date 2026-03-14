@@ -66,12 +66,16 @@ defmodule Xb5Benchmark do
     {runtime_data, runtime_n_values} = get_merged_data(output_dir, :runtime)
     {memory_data, memory_n_values} = get_merged_data(output_dir, :memory)
 
-    merged_json = Jason.encode!(%{
-      system_info: system_info,
-      n_values: :lists.usort(runtime_n_values ++ memory_n_values),
-      runtime_data: runtime_data,
-      memory_data: memory_data
-    }, pretty: true)
+    merged_json =
+      Jason.encode!(
+        %{
+          system_info: system_info,
+          n_values: :lists.usort(runtime_n_values ++ memory_n_values),
+          runtime_data: runtime_data,
+          memory_data: memory_data
+        },
+        pretty: true
+      )
 
     output_dir
     |> Path.join("merged_data.json")
@@ -89,13 +93,15 @@ defmodule Xb5Benchmark do
 
     n_values =
       entries
-      |> Enum.map(&(&1["n"]))
+      |> Enum.map(& &1["n"])
       |> Enum.uniq()
 
     merged_data =
       entries
-      |> Enum.group_by(&(&1["build_type"]))
-      |> Map.new(fn {build_type, entries} -> {build_type, Enum.group_by(entries, &(&1["group_id"]))} end)
+      |> Enum.group_by(& &1["build_type"])
+      |> Map.new(fn {build_type, entries} ->
+        {build_type, Enum.group_by(entries, & &1["group_id"])}
+      end)
 
     {merged_data, n_values}
   end

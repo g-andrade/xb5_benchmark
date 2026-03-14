@@ -2,6 +2,8 @@ defmodule Xb5Benchmark.Groups do
   @moduledoc false
   use TypedStruct
 
+  import ExUnit.Assertions
+
   defmodule Group do
     @moduledoc false
     typedstruct do
@@ -30,10 +32,11 @@ defmodule Xb5Benchmark.Groups do
 
   #####
 
-  def add_new_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def add_new_many(amount, suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
-      id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :missing_and_unique, 100},
+      id: many_group_id(elem(__ENV__.function, 0), amount),
+      keywords: [:add_new],
+      type: {:each_iteration_many_keys, :missing_and_unique, amount},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -46,6 +49,7 @@ defmodule Xb5Benchmark.Groups do
   def add_existing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
+      keywords: [:add_existing],
       type: {:each_iteration_many_keys, :existing_and_unique, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
@@ -56,10 +60,31 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def delete_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def alternatively_take_smallest_and_insert_largest(
+        amount,
+        suite_fun,
+        iteration_fun,
+        impl_mod,
+        impl_description
+      ) do
     %Group{
-      id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :existing_and_unique, 100},
+      id: :"take_smallest + insert largest x#{amount}",
+      keywords: [:alternatively_take_smallest_and_insert_largest],
+      type: {:each_iteration_many_keys, :to_append, amount},
+      includes_empty?: false,
+      impl_mod: impl_mod,
+      suite_fun: suite_fun,
+      iteration_fun: iteration_fun,
+      tweaks: :none,
+      impl_description: impl_description
+    }
+  end
+
+  def delete_many(amount, suite_fun, iteration_fun, impl_mod, impl_description) do
+    %Group{
+      id: many_group_id(elem(__ENV__.function, 0), amount),
+      keywords: [:delete],
+      type: {:each_iteration_many_keys, :existing_and_unique, amount},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -72,6 +97,7 @@ defmodule Xb5Benchmark.Groups do
   def delete_any_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
+      keywords: [:delete_any_missing],
       type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
@@ -218,10 +244,11 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def insert_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def insert_many(amount, suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
-      id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :missing_and_unique, 100},
+      id: many_group_id(elem(__ENV__.function, 0), amount),
+      keywords: [:insert],
+      type: {:each_iteration_many_keys, :missing_and_unique, amount},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -504,10 +531,11 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def take_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def take_many(amount, suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
-      id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :existing_and_unique, 100},
+      id: many_group_id(elem(__ENV__.function, 0), amount),
+      keywords: [:take],
+      type: {:each_iteration_many_keys, :existing_and_unique, amount},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -520,6 +548,7 @@ defmodule Xb5Benchmark.Groups do
   def take_any_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
+      keywords: [:take_any],
       type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
@@ -530,23 +559,11 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def take_largest(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def take_largest_many(amount, suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
-      id: elem(__ENV__.function, 0),
-      type: :each_iteration_no_keys,
-      includes_empty?: false,
-      impl_mod: impl_mod,
-      suite_fun: suite_fun,
-      iteration_fun: iteration_fun,
-      tweaks: {:duplicate_variants, 10},
-      impl_description: impl_description
-    }
-  end
-
-  def take_largest_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
-    %Group{
-      id: elem(__ENV__.function, 0),
-      type: {:each_iteration_no_keys, 100},
+      id: many_group_id(elem(__ENV__.function, 0), amount),
+      keywords: [:take_largest],
+      type: {:each_iteration_no_keys, amount},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -556,23 +573,11 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def take_smallest(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def take_smallest_many(amount, suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
-      id: elem(__ENV__.function, 0),
-      type: :each_iteration_no_keys,
-      includes_empty?: false,
-      impl_mod: impl_mod,
-      suite_fun: suite_fun,
-      iteration_fun: iteration_fun,
-      tweaks: {:duplicate_variants, 10},
-      impl_description: impl_description
-    }
-  end
-
-  def take_smallest_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
-    %Group{
-      id: elem(__ENV__.function, 0),
-      type: {:each_iteration_no_keys, 100},
+      id: many_group_id(elem(__ENV__.function, 0), amount),
+      keywords: [:take_smallest],
+      type: {:each_iteration_no_keys, amount},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -641,6 +646,16 @@ defmodule Xb5Benchmark.Groups do
   end
 
   ##########
+
+  defp many_group_id(function_name, amount) do
+    assert is_integer(amount) or amount === :N
+
+    string_function_name = Atom.to_string(function_name)
+    base_string_function_name = String.replace_suffix(string_function_name, "_many", "")
+    assert base_string_function_name !== string_function_name
+
+    String.to_atom(base_string_function_name <> "_x#{amount}")
+  end
 
   #  defp set_op_group_name(base_name, percentage_in_common) do
   #    percentage_str = String.pad_leading("#{trunc(percentage_in_common * 100)}", 3, "0")

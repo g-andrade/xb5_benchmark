@@ -100,6 +100,7 @@ defmodule Xb5Benchmark.Cases do
     |> Enum.with_index()
     |> Enum.flat_map_reduce(cache, &group_to_cases(&1, total_groups, grouped_structures, &2))
     |> elem(0)
+    |> Enum.filter(&(&1 !== :test_case_not_possible))
   end
 
   defp get_groups() do
@@ -227,6 +228,28 @@ defmodule Xb5Benchmark.Cases do
   ###
 
   defp new_alternate_case(
+         %Group{},
+         %InputStructures.Wrapper{} = input_wrapper,
+         cache,
+         key_status,
+         batch_amount
+       )
+       when key_status === :existing_and_unique and batch_amount > input_wrapper.n do
+    {:test_case_not_possible, cache}
+  end
+
+  defp new_alternate_case(
+         %Group{},
+         %InputStructures.Wrapper{} = input_wrapper,
+         cache,
+         {:no_keys, amount},
+         _batch_amount
+       )
+       when is_integer(amount) and amount > input_wrapper.n do
+    {:test_case_not_possible, cache}
+  end
+
+  defp new_alternate_case(
          %Group{} = group,
          %InputStructures.Wrapper{} = input_wrapper,
          cache,
@@ -311,13 +334,20 @@ defmodule Xb5Benchmark.Cases do
 
   defp alternate_case_iteration(
          input_variant,
-         %InputStructures.Wrapper{},
+         %InputStructures.Wrapper{} = input_wrapper,
          {:no_keys, arg},
          _,
          _,
          cache
        ) do
-    {[input_variant, arg], cache}
+    resolved_arg =
+      if arg === :N do
+        input_wrapper.n
+      else
+        arg
+      end
+
+    {[input_variant, resolved_arg], cache}
   end
 
   defp alternate_case_iteration(
@@ -436,6 +466,18 @@ defmodule Xb5Benchmark.Cases do
           )
 
         {[input_variant, keys], cache}
+
+      :to_append ->
+        {keys, cache} =
+          Utils.memoized(
+            cache,
+            {:keys_to_append, existing_keys_hash, batch_amount, common_rand_seed},
+            fn ->
+              keys_to_append(input_wrapper.existing_keys_tuple, batch_amount)
+            end
+          )
+
+        {[input_variant, keys], cache}
     end
   end
 
@@ -467,11 +509,17 @@ defmodule Xb5Benchmark.Cases do
     end
   end
 
-  ##
+  ################
 
-  defp existing_keys(existing_keys_tuple, common_rand_seed, amount) do
+  defp existing_keys(existing_keys_tuple, common_rand_seed, amount) when is_integer(amount) do
     key_indices = 0..(amount - 1)//1
     Enum.map(key_indices, &existing_key(existing_keys_tuple, common_rand_seed, &1))
+  end
+
+  ##
+
+  defp existing_keys_unique(existing_keys_tuple, common_rand_seed, :N) do
+    existing_keys_unique(existing_keys_tuple, common_rand_seed, tuple_size(existing_keys_tuple))
   end
 
   defp existing_keys_unique(existing_keys_tuple, common_rand_seed, amount)
@@ -483,7 +531,7 @@ defmodule Xb5Benchmark.Cases do
 
   ##
 
-  defp missing_keys(initial_keys_set, common_rand_seed, amount) do
+  defp missing_keys(initial_keys_set, common_rand_seed, amount) when is_integer(amount) do
     missing_keys_recur(initial_keys_set, common_rand_seed, 0, amount)
   end
 
@@ -499,7 +547,7 @@ defmodule Xb5Benchmark.Cases do
 
   ##
 
-  defp missing_keys_unique(existing_keys_set, common_rand_seed, amount) do
+  defp missing_keys_unique(existing_keys_set, common_rand_seed, amount) when is_integer(amount) do
     missing_keys_unique_recur(existing_keys_set, common_rand_seed, 0, amount)
   end
 
@@ -516,6 +564,28 @@ defmodule Xb5Benchmark.Cases do
 
   defp missing_keys_unique_recur(_existing_keys_set, _, _, 0) do
     []
+  end
+
+  ##
+
+  def keys_to_append(existing_keys_tuple, amount) do
+    largest_key = elem(existing_keys_tuple, tuple_size(existing_keys_tuple) - 1)
+    assert is_integer(largest_key)
+
+    resolved_amount =
+      if amount === :N do
+        tuple_size(existing_keys_tuple)
+      else
+        amount
+      end
+
+    keys = Enum.to_list((largest_key + 1)..(largest_key + resolved_amount)//1)
+
+    assert length(keys) === resolved_amount
+    assert Enum.filter(keys, &(&1 <= largest_key)) === []
+    assert keys |> List.last() |> :erts_debug.size() === 0
+
+    keys
   end
 
   #########

@@ -500,7 +500,8 @@ defmodule Xb5Benchmark.InputStructures do
 
   ##
 
-  defp impl_mod_insert(impl_mod, key, acc) when impl_mod in [:xb5_trees, :xb5_trees_v2, :gb_trees] do
+  defp impl_mod_insert(impl_mod, key, acc)
+       when impl_mod in [:xb5_trees, :xb5_trees_v2, :gb_trees] do
     impl_mod.insert(key, :value, acc)
   end
 

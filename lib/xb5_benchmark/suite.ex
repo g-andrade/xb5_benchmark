@@ -10,6 +10,11 @@ defmodule Xb5Benchmark.Suite do
 
       alias Xb5Benchmark.Groups
 
+      @size_expanding_key_ops_amounts [300]
+      @size_diminishing_key_ops_amounts [300]
+
+      ####################################################
+
       def impl_mod(), do: unquote(coll_mod)
 
       ####################################################
@@ -31,6 +36,29 @@ defmodule Xb5Benchmark.Suite do
       end
 
       def add_many_recur(_coll, []) do
+        :ok
+      end
+
+      ####################################################
+
+      def run_each_alt_takesmall_inslargest([coll, keys | next]) do
+        _ = alt_takesmall_inslargest_recur(coll, keys)
+        run_each_alt_takesmall_inslargest(next)
+      end
+
+      def run_each_alt_takesmall_inslargest([]) do
+        :ok
+      end
+
+      ##
+
+      def alt_takesmall_inslargest_recur(coll, [key | next]) do
+        coll = coll_take_smallest_and_discard(coll)
+        coll = coll_insert(key, coll)
+        alt_takesmall_inslargest_recur(coll, next)
+      end
+
+      def alt_takesmall_inslargest_recur(_coll, []) do
         :ok
       end
 
@@ -553,17 +581,6 @@ defmodule Xb5Benchmark.Suite do
 
       ####################################################
 
-      def run_each_take_largest([coll | next]) do
-        _ = coll_take_largest_and_discard(coll)
-        run_each_take_largest(next)
-      end
-
-      def run_each_take_largest([]) do
-        :ok
-      end
-
-      ####################################################
-
       def run_each_take_largest_many([coll, amount | next]) do
         _ = take_largest_recur(coll, amount)
         run_each_take_largest_many(next)
@@ -581,17 +598,6 @@ defmodule Xb5Benchmark.Suite do
       end
 
       def take_largest_recur(_coll, 0) do
-        :ok
-      end
-
-      ####################################################
-
-      def run_each_take_smallest([coll | next]) do
-        _ = coll_take_smallest_and_discard(coll)
-        run_each_take_smallest(next)
-      end
-
-      def run_each_take_smallest([]) do
         :ok
       end
 
@@ -950,16 +956,17 @@ defmodule Xb5Benchmark.Suite do
       ####################################################
 
       if Module.defines?(__MODULE__, {:run_each_take_many, 1}) do
-        def group_take_x100,
-          do:
-            Groups.take_x100(
-              &run_each_take_many/1,
-              &take_recur/2,
-              impl_mod(),
-              coll_api_name(:take)
-            )
+        def groups_take_many do
+          size_changing_key_ops_groups(
+            &Groups.take_many/5,
+            &run_each_take_many/1,
+            &take_recur/2,
+            impl_mod(),
+            coll_api_name(:take)
+          )
+        end
       else
-        def group_take_x100, do: nil
+        def groups_take_many, do: []
       end
 
       ####################################################
@@ -1016,11 +1023,13 @@ defmodule Xb5Benchmark.Suite do
 
       def groups() do
         [
-          Groups.add_new_x100(
+          size_changing_key_ops_groups(
+            &Groups.add_new_many/5,
             &run_each_add_many/1,
             &add_many_recur/2,
             impl_mod(),
-            coll_api_name(:add)
+            coll_api_name(:add),
+            size_expanding: true
           ),
           ##
           Groups.add_existing_x100(
@@ -1030,7 +1039,16 @@ defmodule Xb5Benchmark.Suite do
             coll_api_name(:add)
           ),
           ##
-          Groups.delete_x100(
+          size_changing_key_ops_groups(
+            &Groups.alternatively_take_smallest_and_insert_largest/5,
+            &run_each_alt_takesmall_inslargest/1,
+            &alt_takesmall_inslargest_recur/2,
+            impl_mod(),
+            "#{coll_api_name(:take_smallest)} + #{coll_api_name(:insert)}"
+          ),
+          ##
+          size_changing_key_ops_groups(
+            &Groups.delete_many/5,
             &run_each_delete_many/1,
             &delete_many_recur/2,
             impl_mod(),
@@ -1062,11 +1080,13 @@ defmodule Xb5Benchmark.Suite do
           ##
           group_get_x100(),
           ##
-          Groups.insert_x100(
+          size_changing_key_ops_groups(
+            &Groups.insert_many/5,
             &run_each_insert_many/1,
             &insert_many_recur/2,
             impl_mod(),
-            coll_api_name(:insert)
+            coll_api_name(:insert),
+            size_expanding: true
           ),
           ##
           groups_intersection(),
@@ -1140,32 +1160,19 @@ defmodule Xb5Benchmark.Suite do
             coll_api_name(:smallest)
           ),
           ##
-          group_take_x100(),
-          ##
+          groups_take_many(),
           group_take_any_missing_x100(),
           ##
-          Groups.take_largest(
-            &run_each_take_largest/1,
-            &coll_take_largest_and_discard/1,
-            impl_mod(),
-            coll_api_name(:take_largest)
-          ),
-          ##
-          Groups.take_largest_x100(
+          size_changing_key_ops_groups(
+            &Groups.take_largest_many/5,
             &run_each_take_largest_many/1,
             &take_largest_recur/2,
             impl_mod(),
             coll_api_name(:take_largest)
           ),
           ##
-          Groups.take_smallest(
-            &run_each_take_smallest/1,
-            &coll_take_smallest_and_discard/1,
-            impl_mod(),
-            coll_api_name(:take_smallest)
-          ),
-          ##
-          Groups.take_smallest_x100(
+          size_changing_key_ops_groups(
+            &Groups.take_smallest_many/5,
             &run_each_take_smallest_many/1,
             &take_smallest_recur/2,
             impl_mod(),
@@ -1185,6 +1192,27 @@ defmodule Xb5Benchmark.Suite do
         ]
         |> List.flatten()
         |> Enum.filter(&(&1 !== nil))
+      end
+
+      ###############
+
+      def size_changing_key_ops_groups(
+            group_fun,
+            suite_fun,
+            iteration_fun,
+            impl_mod,
+            impl_description,
+            opts \\ []
+          ) do
+        amounts =
+          if opts[:size_expanding] do
+            @size_expanding_key_ops_amounts
+          else
+            @size_diminishing_key_ops_amounts
+          end
+
+        ##
+        Enum.map(amounts, &group_fun.(&1, suite_fun, iteration_fun, impl_mod, impl_description))
       end
     end
   end
