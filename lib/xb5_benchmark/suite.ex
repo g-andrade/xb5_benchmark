@@ -809,16 +809,16 @@ defmodule Xb5Benchmark.Suite do
       ####################################################
 
       if Module.defines?(__MODULE__, {:run_each_get_many, 1}) do
-        def group_get_x100,
+        def group_get_x300,
           do:
-            Groups.get_x100(
+            Groups.get_x300(
               &run_each_get_many/1,
               &get_many_recur/2,
               impl_mod(),
               coll_api_name(:get)
             )
       else
-        def group_get_x100, do: nil
+        def group_get_x300, do: nil
       end
 
       ####################################################
@@ -895,13 +895,13 @@ defmodule Xb5Benchmark.Suite do
       if Module.defines?(__MODULE__, {:run_each_lookup_many, 1}) do
         def groups_lookup_many do
           [
-            Groups.lookup_existing_x100(
+            Groups.lookup_existing_x300(
               &run_each_lookup_many/1,
               &lookup_many_recur/2,
               impl_mod(),
               coll_api_name(:lookup)
             ),
-            Groups.lookup_missing_x100(
+            Groups.lookup_missing_x300(
               &run_each_lookup_many/1,
               &lookup_many_recur/2,
               impl_mod(),
@@ -920,7 +920,7 @@ defmodule Xb5Benchmark.Suite do
       if Module.defines?(__MODULE__, {:run_each_nth_many, 1}) do
         def groups_nth do
           [
-            Groups.nth_x100(
+            Groups.nth_x300(
               &run_each_nth_many/1,
               &nth_many_recur/2,
               impl_mod(),
@@ -939,7 +939,7 @@ defmodule Xb5Benchmark.Suite do
       if Module.defines?(__MODULE__, {:run_each_rank_many, 1}) do
         def groups_rank do
           [
-            Groups.rank_existing_x100(
+            Groups.rank_existing_x300(
               &run_each_rank_many/1,
               &rank_many_recur/2,
               impl_mod(),
@@ -972,16 +972,16 @@ defmodule Xb5Benchmark.Suite do
       ####################################################
 
       if Module.defines?(__MODULE__, {:run_each_take_any_many, 1}) do
-        def group_take_any_missing_x100,
+        def group_take_any_missing_x300,
           do:
-            Groups.take_any_missing_x100(
+            Groups.take_any_missing_x300(
               &run_each_take_any_many/1,
               &take_any_recur/2,
               impl_mod(),
               coll_api_name(:take_any)
             )
       else
-        def group_take_any_missing_x100, do: nil
+        def group_take_any_missing_x300, do: nil
       end
 
       ####################################################
@@ -997,16 +997,16 @@ defmodule Xb5Benchmark.Suite do
       ####################################################
 
       if Module.defines?(__MODULE__, {:run_each_update_many, 1}) do
-        def group_update_x100,
+        def group_update_x300,
           do:
-            Groups.update_x100(
+            Groups.update_x300(
               &run_each_update_many/1,
               &update_many_recur/2,
               impl_mod(),
               coll_api_name(:update)
             )
       else
-        def group_update_x100, do: nil
+        def group_update_x300, do: nil
       end
 
       ####################################################
@@ -1032,7 +1032,7 @@ defmodule Xb5Benchmark.Suite do
             size_expanding: true
           ),
           ##
-          Groups.add_existing_x100(
+          Groups.add_existing_x300(
             &run_each_add_many/1,
             &add_many_recur/2,
             impl_mod(),
@@ -1055,7 +1055,7 @@ defmodule Xb5Benchmark.Suite do
             coll_api_name(:delete)
           ),
           ##
-          Groups.delete_any_missing_x100(
+          Groups.delete_any_missing_x300(
             &run_each_delete_any_many/1,
             &delete_any_many_recur/2,
             impl_mod(),
@@ -1078,7 +1078,7 @@ defmodule Xb5Benchmark.Suite do
             coll_api_name(:from_ordset_or_orddict)
           ),
           ##
-          group_get_x100(),
+          group_get_x300(),
           ##
           size_changing_key_ops_groups(
             &Groups.insert_many/5,
@@ -1102,14 +1102,14 @@ defmodule Xb5Benchmark.Suite do
           ##
           groups_is_equal(),
           ##
-          Groups.is_member_existing_x100(
+          Groups.is_member_existing_x300(
             &run_each_is_member_many/1,
             &is_member_recur/2,
             impl_mod(),
             coll_api_name(:is_member)
           ),
           ##
-          Groups.is_member_missing_x100(
+          Groups.is_member_missing_x300(
             &run_each_is_member_many/1,
             &is_member_recur/2,
             impl_mod(),
@@ -1120,7 +1120,7 @@ defmodule Xb5Benchmark.Suite do
           ##
           group_keys(),
           ##
-          Groups.larger_x100(
+          Groups.larger_x300(
             &run_each_larger_many/1,
             &larger_many_recur/2,
             impl_mod(),
@@ -1146,7 +1146,7 @@ defmodule Xb5Benchmark.Suite do
           groups_nth(),
           groups_rank(),
           ##
-          Groups.smaller_x100(
+          Groups.smaller_x300(
             &run_each_smaller_many/1,
             &smaller_many_recur/2,
             impl_mod(),
@@ -1161,7 +1161,7 @@ defmodule Xb5Benchmark.Suite do
           ),
           ##
           groups_take_many(),
-          group_take_any_missing_x100(),
+          group_take_any_missing_x300(),
           ##
           size_changing_key_ops_groups(
             &Groups.take_largest_many/5,
@@ -1187,7 +1187,7 @@ defmodule Xb5Benchmark.Suite do
           ),
           ##
           groups_union(),
-          group_update_x100(),
+          group_update_x300(),
           group_values()
         ]
         |> List.flatten()
