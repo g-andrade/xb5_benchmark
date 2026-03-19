@@ -94,11 +94,11 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def delete_any_missing_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def delete_any_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       keywords: [:delete_any_missing],
-      type: {:each_iteration_many_keys, :missing, 300},
+      type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -231,10 +231,10 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def get_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def get_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :existing, 300},
+      type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -342,10 +342,10 @@ defmodule Xb5Benchmark.Groups do
     )
   end
 
-  def is_member_existing_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def is_member_existing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :existing, 300},
+      type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -355,10 +355,10 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def is_member_missing_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def is_member_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :missing, 300},
+      type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -414,10 +414,10 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def larger_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def larger_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :existing, 300},
+      type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -440,10 +440,10 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def lookup_existing_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def lookup_existing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :existing, 300},
+      type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -453,10 +453,10 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def lookup_missing_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def lookup_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :missing, 300},
+      type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -479,10 +479,10 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def nth_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def nth_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_ranks, 300},
+      type: {:each_iteration_many_ranks, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -492,10 +492,10 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def rank_existing_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def rank_existing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :existing, 300},
+      type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -505,10 +505,10 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def smaller_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def smaller_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
-      type: {:each_iteration_many_keys, :existing, 300},
+      type: {:each_iteration_many_keys, :existing, 100},
       includes_empty?: false,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
@@ -545,11 +545,11 @@ defmodule Xb5Benchmark.Groups do
     }
   end
 
-  def take_any_missing_x300(suite_fun, iteration_fun, impl_mod, impl_description) do
+  def take_any_missing_x100(suite_fun, iteration_fun, impl_mod, impl_description) do
     %Group{
       id: elem(__ENV__.function, 0),
       keywords: [:take_any],
-      type: {:each_iteration_many_keys, :missing, 300},
+      type: {:each_iteration_many_keys, :missing, 100},
       includes_empty?: true,
       impl_mod: impl_mod,
       suite_fun: suite_fun,
