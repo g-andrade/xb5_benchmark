@@ -44,8 +44,8 @@ defmodule Xb5Benchmark.InputStructures do
     [
       :sequential,
       :random,
-      :from_ordset_or_orddict,
-      :xb5_adversarial
+      :from_ordset_or_orddict
+      # :xb5_adversarial
     ]
   end
 
