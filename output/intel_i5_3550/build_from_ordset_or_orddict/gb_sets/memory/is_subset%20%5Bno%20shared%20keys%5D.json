@@ -1,11 +1,11 @@
 {
   "build_type": "from_ordset_or_orddict",
   "name": "memory",
-  "timestamp": "2026-03-05T19:28:37.001824Z",
+  "timestamp": "2026-03-19T20:43:49.711894Z",
   "impl_mod": "gb_sets",
-  "group_id": "is_subset [no shared keys]",
-  "impl_description": ":gb_sets.is_subset/2",
   "tweaks": "none",
+  "impl_description": ":gb_sets.is_subset/2",
+  "group_id": "is_subset [no shared keys]",
   "measurements": [
     {
       "maximum": 0,
@@ -18,16 +18,16 @@
         "75": 0.0
       },
       "average": 0.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 0.0,
-      "median": 0.0,
-      "minimum": 0,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 0.0
+      "median": 0.0,
+      "frequency_distribution": "removed",
+      "minimum": 0,
+      "lower_outlier_bound": 0.0,
+      "upper_outlier_bound": 0.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 3232,
@@ -40,16 +40,16 @@
         "75": 3232.0
       },
       "average": 3232.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 3232.0,
-      "median": 3232.0,
-      "minimum": 3232,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 3232.0
+      "median": 3232.0,
+      "frequency_distribution": "removed",
+      "minimum": 3232,
+      "lower_outlier_bound": 3232.0,
+      "upper_outlier_bound": 3232.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 6432,
@@ -62,16 +62,16 @@
         "75": 6432.0
       },
       "average": 6432.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 6432.0,
-      "median": 6432.0,
-      "minimum": 6432,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 6432.0
+      "median": 6432.0,
+      "frequency_distribution": "removed",
+      "minimum": 6432,
+      "lower_outlier_bound": 6432.0,
+      "upper_outlier_bound": 6432.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 9632,
@@ -84,16 +84,16 @@
         "75": 9632.0
       },
       "average": 9632.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 9632.0,
-      "median": 9632.0,
-      "minimum": 9632,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 9632.0
+      "median": 9632.0,
+      "frequency_distribution": "removed",
+      "minimum": 9632,
+      "lower_outlier_bound": 9632.0,
+      "upper_outlier_bound": 9632.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 12832,
@@ -106,16 +106,16 @@
         "75": 12832.0
       },
       "average": 12832.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 12832.0,
-      "median": 12832.0,
-      "minimum": 12832,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 12832.0
+      "median": 12832.0,
+      "frequency_distribution": "removed",
+      "minimum": 12832,
+      "lower_outlier_bound": 12832.0,
+      "upper_outlier_bound": 12832.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 16032,
@@ -128,16 +128,16 @@
         "75": 16032.0
       },
       "average": 16032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 16032.0,
-      "median": 16032.0,
-      "minimum": 16032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 16032.0
+      "median": 16032.0,
+      "frequency_distribution": "removed",
+      "minimum": 16032,
+      "lower_outlier_bound": 16032.0,
+      "upper_outlier_bound": 16032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 19232,
@@ -150,16 +150,16 @@
         "75": 19232.0
       },
       "average": 19232.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 19232.0,
-      "median": 19232.0,
-      "minimum": 19232,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 19232.0
+      "median": 19232.0,
+      "frequency_distribution": "removed",
+      "minimum": 19232,
+      "lower_outlier_bound": 19232.0,
+      "upper_outlier_bound": 19232.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 22432,
@@ -172,16 +172,16 @@
         "75": 22432.0
       },
       "average": 22432.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 22432.0,
-      "median": 22432.0,
-      "minimum": 22432,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 22432.0
+      "median": 22432.0,
+      "frequency_distribution": "removed",
+      "minimum": 22432,
+      "lower_outlier_bound": 22432.0,
+      "upper_outlier_bound": 22432.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 25632,
@@ -194,16 +194,16 @@
         "75": 25632.0
       },
       "average": 25632.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 25632.0,
-      "median": 25632.0,
-      "minimum": 25632,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 25632.0
+      "median": 25632.0,
+      "frequency_distribution": "removed",
+      "minimum": 25632,
+      "lower_outlier_bound": 25632.0,
+      "upper_outlier_bound": 25632.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 28832,
@@ -216,16 +216,16 @@
         "75": 28832.0
       },
       "average": 28832.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 28832.0,
-      "median": 28832.0,
-      "minimum": 28832,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 28832.0
+      "median": 28832.0,
+      "frequency_distribution": "removed",
+      "minimum": 28832,
+      "lower_outlier_bound": 28832.0,
+      "upper_outlier_bound": 28832.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 32032,
@@ -238,16 +238,16 @@
         "75": 32032.0
       },
       "average": 32032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 32032.0,
-      "median": 32032.0,
-      "minimum": 32032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 32032.0
+      "median": 32032.0,
+      "frequency_distribution": "removed",
+      "minimum": 32032,
+      "lower_outlier_bound": 32032.0,
+      "upper_outlier_bound": 32032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 64032,
@@ -260,16 +260,16 @@
         "75": 64032.0
       },
       "average": 64032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 64032.0,
-      "median": 64032.0,
-      "minimum": 64032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 64032.0
+      "median": 64032.0,
+      "frequency_distribution": "removed",
+      "minimum": 64032,
+      "lower_outlier_bound": 64032.0,
+      "upper_outlier_bound": 64032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 96032,
@@ -282,16 +282,16 @@
         "75": 96032.0
       },
       "average": 96032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 96032.0,
-      "median": 96032.0,
-      "minimum": 96032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 96032.0
+      "median": 96032.0,
+      "frequency_distribution": "removed",
+      "minimum": 96032,
+      "lower_outlier_bound": 96032.0,
+      "upper_outlier_bound": 96032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 128032,
@@ -304,16 +304,16 @@
         "75": 128032.0
       },
       "average": 128032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 128032.0,
-      "median": 128032.0,
-      "minimum": 128032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 128032.0
+      "median": 128032.0,
+      "frequency_distribution": "removed",
+      "minimum": 128032,
+      "lower_outlier_bound": 128032.0,
+      "upper_outlier_bound": 128032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 160032,
@@ -326,16 +326,16 @@
         "75": 160032.0
       },
       "average": 160032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 160032.0,
-      "median": 160032.0,
-      "minimum": 160032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 160032.0
+      "median": 160032.0,
+      "frequency_distribution": "removed",
+      "minimum": 160032,
+      "lower_outlier_bound": 160032.0,
+      "upper_outlier_bound": 160032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 192032,
@@ -348,16 +348,16 @@
         "75": 192032.0
       },
       "average": 192032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 192032.0,
-      "median": 192032.0,
-      "minimum": 192032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 192032.0
+      "median": 192032.0,
+      "frequency_distribution": "removed",
+      "minimum": 192032,
+      "lower_outlier_bound": 192032.0,
+      "upper_outlier_bound": 192032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 224032,
@@ -370,16 +370,16 @@
         "75": 224032.0
       },
       "average": 224032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 224032.0,
-      "median": 224032.0,
-      "minimum": 224032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 224032.0
+      "median": 224032.0,
+      "frequency_distribution": "removed",
+      "minimum": 224032,
+      "lower_outlier_bound": 224032.0,
+      "upper_outlier_bound": 224032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 256032,
@@ -392,16 +392,16 @@
         "75": 256032.0
       },
       "average": 256032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 256032.0,
-      "median": 256032.0,
-      "minimum": 256032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 256032.0
+      "median": 256032.0,
+      "frequency_distribution": "removed",
+      "minimum": 256032,
+      "lower_outlier_bound": 256032.0,
+      "upper_outlier_bound": 256032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 288032,
@@ -414,16 +414,16 @@
         "75": 288032.0
       },
       "average": 288032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 288032.0,
-      "median": 288032.0,
-      "minimum": 288032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 288032.0
+      "median": 288032.0,
+      "frequency_distribution": "removed",
+      "minimum": 288032,
+      "lower_outlier_bound": 288032.0,
+      "upper_outlier_bound": 288032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 320032,
@@ -436,16 +436,16 @@
         "75": 320032.0
       },
       "average": 320032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 320032.0,
-      "median": 320032.0,
-      "minimum": 320032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 320032.0
+      "median": 320032.0,
+      "frequency_distribution": "removed",
+      "minimum": 320032,
+      "lower_outlier_bound": 320032.0,
+      "upper_outlier_bound": 320032.0,
+      "outliers": "removed",
+      "sample_size": 50
     },
     {
       "maximum": 480032,
@@ -458,16 +458,16 @@
         "75": 480032.0
       },
       "average": 480032.0,
-      "sample_size": 50,
       "variance": 0.0,
       "standard_deviation": 0.0,
-      "frequency_distribution": "removed",
-      "lower_outlier_bound": 480032.0,
-      "median": 480032.0,
-      "minimum": 480032,
-      "outliers": "removed",
       "standard_deviation_ratio": 0.0,
-      "upper_outlier_bound": 480032.0
+      "median": 480032.0,
+      "frequency_distribution": "removed",
+      "minimum": 480032,
+      "lower_outlier_bound": 480032.0,
+      "upper_outlier_bound": 480032.0,
+      "outliers": "removed",
+      "sample_size": 50
     }
   ]
 }
