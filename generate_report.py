@@ -279,7 +279,7 @@ var SECTIONS = [
       { id: 'larger_x100',        label: 'larger \u00d7100',      type: 'simple' },
       { id: 'take_largest_x300',  label: 'take_largest \u00d7300', type: 'simple' },
       { id: 'take_smallest_x300', label: 'take_smallest \u00d7300', type: 'simple' },
-      { id: 'take_smallest + insert largest x300', label: 'take_smallest + insert_largest \u00d7300', type: 'simple' }
+      { id: 'take_smallest + insert largest x300', label: 'take_smallest / insert new largest \u00d7300', type: 'simple' }
     ]
   },
   {
@@ -316,7 +316,7 @@ var SECTIONS = [
       { id: 'larger_x100',        label: 'larger \u00d7100',      type: 'simple' },
       { id: 'take_largest_x300',  label: 'take_largest \u00d7300', type: 'simple' },
       { id: 'take_smallest_x300', label: 'take_smallest \u00d7300', type: 'simple' },
-      { id: 'take_smallest + insert largest x300', label: 'take_smallest + insert_largest \u00d7300', type: 'simple' }
+      { id: 'take_smallest + insert largest x300', label: 'take_smallest / insert new largest \u00d7300', type: 'simple' }
     ]
   },
   {
@@ -356,7 +356,7 @@ var SECTIONS = [
       { id: 'larger_x100',        label: 'larger \u00d7100',      type: 'simple' },
       { id: 'take_largest_x300',  label: 'take_largest \u00d7300', type: 'simple' },
       { id: 'take_smallest_x300', label: 'take_smallest \u00d7300', type: 'simple' },
-      { id: 'take_smallest + insert largest x300', label: 'take_smallest + insert_largest \u00d7300', type: 'simple' }
+      { id: 'take_smallest + insert largest x300', label: 'take_smallest / insert new largest \u00d7300', type: 'simple' }
     ]
   }
 ];
