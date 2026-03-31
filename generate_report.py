@@ -250,10 +250,10 @@ var SECTIONS = [
       { id: 'is_equal',     label: 'is_equal',     type: 'named'  },
       { id: 'is_subset',    label: 'is_subset',    type: 'named'  },
       { div: 'Element operations' },
-      { id: 'add_new_x100',            label: 'add \u00d7100 [new key]',       type: 'simple' },
-      { id: 'add_existing_x100',       label: 'add \u00d7100 [existing key]',  type: 'simple' },
-      { id: 'insert_x100',             label: 'insert \u00d7100 [new key]',    type: 'simple' },
-      { id: 'delete_x100',             label: 'delete \u00d7100 [existing]',   type: 'simple' },
+      { id: 'add_new_x300',            label: 'add \u00d7300 [new key]',       type: 'simple' },
+      { id: 'add_existing_x300',       label: 'add \u00d7300 [existing key]',  type: 'simple' },
+      { id: 'insert_x300',             label: 'insert \u00d7300 [new key]',    type: 'simple' },
+      { id: 'delete_x300',             label: 'delete \u00d7300 [existing]',   type: 'simple' },
       { id: 'delete_any_missing_x100', label: 'delete_any \u00d7100 [miss]',   type: 'simple' },
       { id: 'is_member_existing_x100', label: 'is_member \u00d7100 [hit]',     type: 'simple' },
       { id: 'is_member_missing_x100',  label: 'is_member \u00d7100 [miss]',    type: 'simple' },
@@ -275,10 +275,9 @@ var SECTIONS = [
       { id: 'smaller_x100',       label: 'smaller \u00d7100',     type: 'simple' },
       { id: 'smallest',           label: 'smallest',              type: 'simple' },
       { id: 'larger_x100',        label: 'larger \u00d7100',      type: 'simple' },
-      { id: 'take_largest',       label: 'take_largest',          type: 'simple' },
-      { id: 'take_largest_x100',  label: 'take_largest \u00d7100', type: 'simple' },
-      { id: 'take_smallest',      label: 'take_smallest',         type: 'simple' },
-      { id: 'take_smallest_x100', label: 'take_smallest \u00d7100', type: 'simple' }
+      { id: 'take_largest_x300',  label: 'take_largest \u00d7300', type: 'simple' },
+      { id: 'take_smallest_x300', label: 'take_smallest \u00d7300', type: 'simple' },
+      { id: 'take_smallest + insert largest x300', label: 'take_smallest + insert_largest \u00d7300', type: 'simple' }
     ]
   },
   {
@@ -289,14 +288,14 @@ var SECTIONS = [
       { id: 'get_x100',              label: 'get \u00d7100',                type: 'simple' },
       { id: 'lookup_existing_x100',  label: 'lookup \u00d7100 [hit]',       type: 'simple' },
       { id: 'lookup_missing_x100',   label: 'lookup \u00d7100 [miss]',      type: 'simple' },
-      { id: 'update_x100',           label: 'update \u00d7100',             type: 'simple' },
-      { id: 'take_x100',             label: 'take \u00d7100 [existing]',    type: 'simple' },
+      { id: 'update_x300',           label: 'update \u00d7300',             type: 'simple' },
+      { id: 'take_x300',             label: 'take \u00d7300 [existing]',    type: 'simple' },
       { id: 'take_any_missing_x100', label: 'take_any \u00d7100 [miss]',    type: 'simple' },
       { div: 'Element operations' },
-      { id: 'add_new_x100',            label: 'enter \u00d7100 [new key]',     type: 'simple' },
-      { id: 'add_existing_x100',       label: 'enter \u00d7100 [existing key]', type: 'simple' },
-      { id: 'insert_x100',             label: 'insert \u00d7100 [new key]',    type: 'simple' },
-      { id: 'delete_x100',             label: 'delete \u00d7100 [existing]',   type: 'simple' },
+      { id: 'add_new_x300',            label: 'enter \u00d7300 [new key]',     type: 'simple' },
+      { id: 'add_existing_x300',       label: 'enter \u00d7300 [existing key]', type: 'simple' },
+      { id: 'insert_x300',             label: 'insert \u00d7300 [new key]',    type: 'simple' },
+      { id: 'delete_x300',             label: 'delete \u00d7300 [existing]',   type: 'simple' },
       { id: 'delete_any_missing_x100', label: 'delete_any \u00d7100 [miss]',   type: 'simple' },
       { id: 'is_member_existing_x100', label: 'is_defined \u00d7100 [hit]',    type: 'simple' },
       { id: 'is_member_missing_x100',  label: 'is_defined \u00d7100 [miss]',   type: 'simple' },
@@ -313,10 +312,9 @@ var SECTIONS = [
       { id: 'smaller_x100',       label: 'smaller \u00d7100',     type: 'simple' },
       { id: 'smallest',           label: 'smallest',              type: 'simple' },
       { id: 'larger_x100',        label: 'larger \u00d7100',      type: 'simple' },
-      { id: 'take_largest',       label: 'take_largest',          type: 'simple' },
-      { id: 'take_largest_x100',  label: 'take_largest \u00d7100', type: 'simple' },
-      { id: 'take_smallest',      label: 'take_smallest',         type: 'simple' },
-      { id: 'take_smallest_x100', label: 'take_smallest \u00d7100', type: 'simple' }
+      { id: 'take_largest_x300',  label: 'take_largest \u00d7300', type: 'simple' },
+      { id: 'take_smallest_x300', label: 'take_smallest \u00d7300', type: 'simple' },
+      { id: 'take_smallest + insert largest x300', label: 'take_smallest + insert_largest \u00d7300', type: 'simple' }
     ]
   },
   {
@@ -327,10 +325,10 @@ var SECTIONS = [
       { id: 'nth_x100',           label: 'nth \u00d7100',              type: 'simple', exclusive: true },
       { id: 'rank_existing_x100', label: 'rank \u00d7100 [existing]',  type: 'simple', exclusive: true },
       { div: 'Element operations' },
-      { id: 'add_new_x100',            label: 'add \u00d7100 [new key]',      type: 'simple' },
-      { id: 'add_existing_x100',       label: 'add \u00d7100 [existing key]', type: 'simple' },
-      { id: 'insert_x100',             label: 'insert \u00d7100 [new key]',   type: 'simple' },
-      { id: 'delete_x100',             label: 'delete \u00d7100 [existing]',  type: 'simple' },
+      { id: 'add_new_x300',            label: 'add \u00d7300 [new key]',      type: 'simple' },
+      { id: 'add_existing_x300',       label: 'add \u00d7300 [existing key]', type: 'simple' },
+      { id: 'insert_x300',             label: 'insert \u00d7300 [new key]',   type: 'simple' },
+      { id: 'delete_x300',             label: 'delete \u00d7300 [existing]',  type: 'simple' },
       { id: 'delete_any_missing_x100', label: 'delete_any \u00d7100 [miss]',  type: 'simple' },
       { id: 'is_member_existing_x100', label: 'is_member \u00d7100 [hit]',    type: 'simple' },
       { id: 'is_member_missing_x100',  label: 'is_member \u00d7100 [miss]',   type: 'simple' },
@@ -352,10 +350,9 @@ var SECTIONS = [
       { id: 'smaller_x100',       label: 'smaller \u00d7100',     type: 'simple' },
       { id: 'smallest',           label: 'smallest',              type: 'simple' },
       { id: 'larger_x100',        label: 'larger \u00d7100',      type: 'simple' },
-      { id: 'take_largest',       label: 'take_largest',          type: 'simple' },
-      { id: 'take_largest_x100',  label: 'take_largest \u00d7100', type: 'simple' },
-      { id: 'take_smallest',      label: 'take_smallest',         type: 'simple' },
-      { id: 'take_smallest_x100', label: 'take_smallest \u00d7100', type: 'simple' }
+      { id: 'take_largest_x300',  label: 'take_largest \u00d7300', type: 'simple' },
+      { id: 'take_smallest_x300', label: 'take_smallest \u00d7300', type: 'simple' },
+      { id: 'take_smallest + insert largest x300', label: 'take_smallest + insert_largest \u00d7300', type: 'simple' }
     ]
   }
 ];
