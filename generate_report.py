@@ -124,14 +124,16 @@ body {
 .ov-header { font-size: 12px; color: #888; margin-bottom: 10px; }
 .ov-th-n { display: block; font-size: 10px; font-weight: normal; color: #aaa; margin-top: 2px; }
 .ov-table {
-  border-collapse: collapse; background: #fff; width: 100%; max-width: 480px;
+  border-collapse: collapse; background: #fff; width: 100%; max-width: 680px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 6px; overflow: hidden;
 }
 .ov-table th {
-  background: #f8f9fb; padding: 7px 14px; text-align: left;
+  background: #f8f9fb; padding: 7px 10px; text-align: left;
   font-size: 11px; font-weight: 700; color: #777; border-bottom: 2px solid #e8eaf0;
 }
-.ov-table td { padding: 6px 14px; border-bottom: 1px solid #f0f2f5; font-size: 13px; }
+.ov-table th.ov-th-ratio { text-align: center; }
+.ov-table td { padding: 6px 10px; border-bottom: 1px solid #f0f2f5; font-size: 13px; }
+.ov-table td.ov-td-ratio { text-align: center; }
 .ov-table tr:last-child td { border-bottom: none; }
 .ov-table tr:hover td { background: #fafbff; }
 .ov-table td.op-name { color: #1a73e8; cursor: pointer; font-weight: 500; }
@@ -523,16 +525,15 @@ function repGroupId(fam, buildType) {
   return fam.id;
 }
 
-function computeRatio(fam, buildType, primary, baseline) {
+function computeRatio(fam, buildType, primary, baseline, n) {
   var gid = repGroupId(fam, buildType);
   if (!gid) return null;
   var entries = getEntries(buildType, gid);
   var ep = entries.find(function(e) { return e.impl_mod === primary; });
   var eb = entries.find(function(e) { return e.impl_mod === baseline; });
   if (!ep || !eb) return null;
-  var allN = getAllN();
-  var vp = getValAt(ep.measurements, 1000, 'median');
-  var vb = getValAt(eb.measurements, 1000, 'median');
+  var vp = getValAt(ep.measurements, n, 'median');
+  var vb = getValAt(eb.measurements, n, 'median');
   return (vp && vb) ? vp / vb : null;
 }
 
@@ -797,10 +798,11 @@ function renderOverview() {
   var metricLbl = isRuntime ? 'Speed ratio' : 'Memory ratio';
   var dirNote   = isRuntime ? '> 100% = xb5 faster' : '< 100% = xb5 uses less';
 
+  var OV_NS = [100, 300, 1000, 5000];
   var h = '<div class="ov-header">' + metricLbl + '  \u00b7  ' + BUILD_LABELS[state.buildType] + '  \u00b7  ' + dirNote + '</div>';
   h += '<table class="ov-table"><thead><tr>';
-  h += '<th>Operation</th><th><span style="color:#444">' + sec.primary + '</span> vs <span style="color:#444">' + sec.baseline + '</span>' +
-       '<span class="ov-th-n">at n=1000</span></th>';
+  h += '<th>Operation</th>';
+  OV_NS.forEach(function(n) { h += '<th class="ov-th-ratio">n=' + n + '</th>'; });
   h += '</tr></thead><tbody>';
 
   // Collect into sub-groups, sort within each, then emit with dividers intact.
@@ -818,17 +820,21 @@ function renderOverview() {
 
   subgroups.forEach(function(grp) {
     if (grp.div) {
-      h += '<tr class="ov-divider"><td colspan="2">' + grp.div + '</td></tr>';
+      h += '<tr class="ov-divider"><td colspan="5">' + grp.div + '</td></tr>';
     }
     grp.items
       .sort(function(a, b) { return a.fam.label.toLowerCase().localeCompare(b.fam.label.toLowerCase()); })
       .forEach(function(x) {
         var fam = x.fam, fi = x.fi;
-        var chip = fam.exclusive
-          ? '<span class="r-na">bag-only</span>'
-          : ratioHtml(computeRatio(fam, state.buildType, sec.primary, sec.baseline));
-        h += '<tr><td class="op-name" title="' + fam.id + '" data-fi="' + fi + '">' +
-             fam.label + '</td><td>' + chip + '</td></tr>';
+        h += '<tr><td class="op-name" title="' + fam.id + '" data-fi="' + fi + '">' + fam.label + '</td>';
+        if (fam.exclusive) {
+          h += '<td colspan="4" style="color:#bbb;font-size:11px;">bag-only</td>';
+        } else {
+          OV_NS.forEach(function(n) {
+            h += '<td class="ov-td-ratio">' + ratioHtml(computeRatio(fam, state.buildType, sec.primary, sec.baseline, n)) + '</td>';
+          });
+        }
+        h += '</tr>';
       });
   });
 
