@@ -328,7 +328,9 @@ var SECTIONS = [
       { id: 'rank_existing_x100', label: 'rank \u00d7100 [existing]',  type: 'simple', exclusive: true },
       { div: 'Element operations' },
       { id: 'add_new_x300',            label: 'add \u00d7300 [new key]',      type: 'simple' },
-      { id: 'add_existing_x300',       label: 'add \u00d7300 [existing key]', type: 'simple' },
+      // noOverview: xb5_bag allows duplicate keys so adding an existing key is a real insertion,
+      // whereas gb_sets silently ignores it — different semantics, not a fair comparison.
+      { id: 'add_existing_x300',       label: 'add \u00d7300 [existing key]', type: 'simple', noOverview: true },
       { id: 'insert_x300',             label: 'insert \u00d7300 [new key]',   type: 'simple' },
       { id: 'delete_x300',             label: 'delete \u00d7300 [existing]',  type: 'simple' },
       { id: 'delete_any_missing_x100', label: 'delete_any \u00d7100 [miss]',  type: 'simple' },
@@ -399,7 +401,7 @@ function hashToState(hash) {
   if (famId === 'overview') {
     fi = -1;
   } else {
-    var fIdx = SECTIONS[si].families.findIndex(function(f) { return !f.div && f.id === famId; });
+    var fIdx = SECTIONS[si].families.findIndex(function(f) { return !f.div && !f.noOverview && f.id === famId; });
     if (fIdx === -1) return null;
     fi = fIdx;
   }
@@ -721,7 +723,7 @@ function populateOpSelect() {
   // but skip dividers.
   var sorted = sec.families
     .map(function(fam, fi) { return { fam: fam, fi: fi }; })
-    .filter(function(x) { return !x.fam.div; })
+    .filter(function(x) { return !x.fam.div && !x.fam.noOverview; })  // noOverview = unfair/misleading comparison
     .sort(function(a, b) { return a.fam.label.toLowerCase().localeCompare(b.fam.label.toLowerCase()); });
 
   sorted.forEach(function(x) {
@@ -823,6 +825,7 @@ function renderOverview() {
       h += '<tr class="ov-divider"><td colspan="5">' + grp.div + '</td></tr>';
     }
     grp.items
+      .filter(function(x) { return !x.fam.noOverview; })
       .sort(function(a, b) { return a.fam.label.toLowerCase().localeCompare(b.fam.label.toLowerCase()); })
       .forEach(function(x) {
         var fam = x.fam, fi = x.fi;
