@@ -100,15 +100,14 @@ TEMPLATE = """<!DOCTYPE html>
 body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 14px; color: #222; background: #f0f2f5;
-  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
 }
 /* ---- Header ---- */
 #header {
   background: #1c2233; color: #e8eaf6;
-  padding: 10px 20px 8px; flex-shrink: 0;
+  padding: 10px 20px 8px;
 }
 .hdr-top { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
-#hdr-title { font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; }
+#hdr-title { font-size: 15px; font-weight: 700; color: #fff; }
 #sysinfo   { font-size: 11px; color: #9fa8da; }
 .hdr-ctrls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .hdr-ctrls .cg { display: flex; align-items: center; gap: 5px; }
@@ -119,7 +118,12 @@ body {
   max-width: 260px;
 }
 /* ---- Main ---- */
-#main { flex: 1; overflow-y: auto; padding: 20px 24px; background: #f0f2f5; }
+#main { padding: 20px 24px; background: #f0f2f5; }
+@media (max-width: 600px) {
+  #sysinfo { display: none; }
+  .hdr-ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  .hdr-ctrls select { max-width: 100%; width: 100%; }
+}
 /* ---- Overview ---- */
 .ov-header { font-size: 12px; color: #888; margin-bottom: 10px; }
 .ov-th-n { display: block; font-size: 10px; font-weight: normal; color: #aaa; margin-top: 2px; }
@@ -910,11 +914,14 @@ function renderFamily(si, fi) {
     '<div class="detail-gid">' + (gid || fam.id) + '</div>' +
     '<div class="detail-subtitle">' + sec.label.replace(sec.primary, '<b style="color:#555">' + sec.primary + '</b>').replace(sec.baseline, '<b style="color:#555">' + sec.baseline + '</b>') + '  \u00b7  ' + BUILD_LABELS[state.buildType] + '</div>' +
     ctrlHtml +
+    (hasComp
+      ? '<div class="chart-lbl">' + pctLbl + '</div><div class="pct-box" id="pct-chart"></div><hr style="border:none;border-top:1px solid #e0e0e0;margin:20px 0 4px">'
+      : '') +
     '<div class="chart-lbl">Performance - median with p25\u2013p75 band</div>' +
     '<div class="chart-box" id="main-chart"></div>' +
-    (hasComp
-      ? '<hr style="border:none;border-top:1px solid #e0e0e0;margin:20px 0 4px"><div class="chart-lbl">' + pctLbl + '</div><div class="pct-box" id="pct-chart"></div>'
-      : '<div style="font-size:12px;color:#888;margin-top:10px;">Bag-exclusive - no baseline comparison.</div>') +
+    (!hasComp
+      ? '<div style="font-size:12px;color:#888;margin-top:10px;">Bag-exclusive - no baseline comparison.</div>'
+      : '') +
     '</div>';
 
   document.getElementById('back-btn').onclick = function() {
@@ -938,8 +945,8 @@ function renderFamily(si, fi) {
   });
 
   if (gid) {
-    buildMainChart('main-chart', gid, sec);
     if (hasComp) buildPctChart('pct-chart', gid, sec);
+    buildMainChart('main-chart', gid, sec);
   }
 }
 
