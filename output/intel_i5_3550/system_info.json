@@ -2,8 +2,8 @@
   "erlang": "28.3.1",
   "os": "Linux",
   "elixir": "1.19.5",
-  "jit_enabled?": true,
-  "num_cores": 4,
+  "available_memory": "19.23 GB",
   "cpu_speed": "Intel(R) Core(TM) i5-3550 CPU @ 3.30GHz",
-  "available_memory": "19.23 GB"
+  "jit_enabled?": true,
+  "num_cores": 1
 }

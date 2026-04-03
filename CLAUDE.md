@@ -19,6 +19,22 @@ mix format --check # Check formatting without modifying
 ```bash
 iex -S mix
 ```
+
+**For reproducible results (recommended on CPUs with aggressive boost clocks):**
+
+Boost clock variability can cause occasional performance drops, pulling p25 far below the median. To reduce noise:
+
+```bash
+# Disable frequency scaling (revert with: cpupower frequency-set -g schedutil)
+sudo cpupower frequency-set -g performance
+
+# Pin to a single logical CPU
+taskset -c 2 iex -S mix
+```
+
+- Avoid CPU 0 (higher OS interrupt activity)
+- If SMT/HT is active, pin to one sibling only; check pairs via `/sys/devices/system/cpu/cpuN/topology/thread_siblings_list`
+
 ```elixir
 # Run full suite, save results to a directory
 Xb5Benchmark.run("output/my_run")

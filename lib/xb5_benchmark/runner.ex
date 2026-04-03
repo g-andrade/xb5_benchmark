@@ -277,7 +277,7 @@ defmodule Xb5Benchmark.Runner do
       convergence_count < state.convergence_limit ->
         run_list = run_list(state.cases, state.run_list_amount_of_reshuffles)
         state = %{state | batch_nr: state.batch_nr + 1, run_list: run_list}
-        :erlang.garbage_collect()
+        # :erlang.garbage_collect()
         run_batches(state)
     end
   end

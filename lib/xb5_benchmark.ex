@@ -74,7 +74,7 @@ defmodule Xb5Benchmark do
           runtime_data: runtime_data,
           memory_data: memory_data
         },
-        pretty: true
+        pretty: false
       )
 
     output_dir
@@ -163,7 +163,7 @@ defmodule Xb5Benchmark do
     group_output_path =
       Path.join(group_output_dir, "#{group_output_file_basename(group.id)}.json")
 
-    File.write!(group_output_path, Jason.encode!(json_output, pretty: true))
+    File.write!(group_output_path, Jason.encode!(json_output, pretty: false))
   end
 
   defp group_output_file_basename(group_id) do
