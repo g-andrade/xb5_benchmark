@@ -200,6 +200,37 @@ body {
 }
 .noscript-msg h2 { font-size: 20px; margin-bottom: 8px; color: #222; }
 .noscript-msg p  { font-size: 14px; color: #777; }
+@media (prefers-color-scheme: dark) {
+  body { background: #111318; color: #dde1f0; }
+  #main { background: #111318; }
+  .ov-header { color: #8892b0; }
+  .ov-th-n { color: #556080; }
+  .ov-table { background: #1c1f2e; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+  .ov-table th { background: #161928; color: #8892b0; border-bottom-color: #2e3450; }
+  .ov-table td { border-bottom-color: #1e2133; }
+  .ov-table tr:hover td { background: #1e2236; }
+  .ov-table td.op-name { color: #7baaf7; }
+  .ov-divider td { background: #161928; color: #556080; border-bottom-color: #2e3450; }
+  .r-na { color: #556080; }
+  .detail-card { background: #1c1f2e; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+  .detail-card.memory-mode { background: #1c1829; }
+  .back-btn { color: #7baaf7; }
+  .detail-gid { color: #556080; }
+  .detail-subtitle { color: #8892b0; }
+  .ctrl-grp2 label { color: #8892b0; }
+  .btn-grp button { background: #1e2236; border-color: #2e3450; color: #aab0cc; }
+  .btn-grp button:hover:not(.active) { background: #252a40; }
+  .chart-lbl { color: #667090; }
+  .no-data { color: #556080; }
+  .r-great { background: #1b3a1d; color: #a5d6a7; }
+  .r-good  { background: #2a3d1a; color: #c5e1a5; }
+  .r-even  { background: #3a3010; color: #fff176; }
+  .r-bad   { background: #3a2010; color: #ffcc80; }
+  .r-worse { background: #3a1515; color: #ef9a9a; }
+  .noscript-msg { color: #8892b0; }
+  .noscript-msg h2 { color: #dde1f0; }
+  .noscript-msg p { color: #8892b0; }
+}
 </style>
 </head>
 <body>
@@ -246,6 +277,14 @@ var IMPL_COLORS = {
   'gb_trees':  '#22963f',
   'xb5_trees': '#c93535',
   'xb5_bag':   '#7b5ea7'
+};
+
+var DARK_IMPL_COLORS = {
+  'gb_sets':   '#60a5fa',
+  'xb5_sets':  '#f0945a',
+  'gb_trees':  '#4caf6a',
+  'xb5_trees': '#e06060',
+  'xb5_bag':   '#e879f9'
 };
 
 var BUILD_LABELS = {
@@ -585,6 +624,7 @@ function ratioHtml(ratio) {
 // ============================================================
 
 var TOUCH = window.matchMedia('(pointer: coarse)').matches;
+var DARK  = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
 var activePlots = [];
 
@@ -614,7 +654,7 @@ function buildMainChart(containerId, groupId, sec) {
   var isRuntime = state.metric === 'runtime';
 
   entries.forEach(function(entry) {
-    var color   = IMPL_COLORS[entry.impl_mod] || '#888';
+    var color   = (DARK ? DARK_IMPL_COLORS : IMPL_COLORS)[entry.impl_mod] || '#888';
     var rgb     = hexToRgb(color);
     var medians = plotN.map(function(n) { return getValAt(entry.measurements, n, 'median'); });
     var p25s    = plotN.map(function(n) { return getValAt(entry.measurements, n, 'p25'); });
@@ -626,7 +666,7 @@ function buildMainChart(containerId, groupId, sec) {
       x: plotN.concat(plotN.slice().reverse()),
       y: p75s.concat(p25s.slice().reverse()),
       type: 'scatter', mode: 'lines', fill: 'toself',
-      fillcolor: 'rgba(' + rgb + ',0.13)', line: { width: 0 },
+      fillcolor: 'rgba(' + rgb + ',' + (DARK ? '0.22' : '0.13') + ')', line: { width: 0 },
       showlegend: false, hoverinfo: 'skip', name: entry.impl_mod + '__band'
     });
     traces.push({
@@ -638,14 +678,21 @@ function buildMainChart(containerId, groupId, sec) {
     });
   });
 
-  var yTitle = isRuntime ? 'Iterations / sec' : 'Memory (bytes)';
-  var bgColor = isRuntime ? 'white' : '#fdfbff';
+  var yTitle    = isRuntime ? 'Iterations / sec' : 'Memory (bytes)';
+  var bgColor   = DARK ? (isRuntime ? '#1c1f2e' : '#1c1829') : (isRuntime ? 'white' : '#fdfbff');
+  var gridColor = DARK ? '#2a2f45' : '#ebebeb';
+  var fontColor = DARK ? '#dde1f0' : '#333';
 
   Plotly.newPlot(el, traces, {
     margin: { t: 8, r: 16, b: 48, l: 72 },
-    xaxis: { title: 'Collection size (n)', gridcolor: '#ebebeb' },
-    yaxis: { title: yTitle, gridcolor: '#ebebeb', rangemode: 'tozero' },
-    legend: { bgcolor: 'rgba(255,255,255,0.85)', bordercolor: '#ddd', borderwidth: 1 },
+    font: { color: fontColor },
+    xaxis: { title: 'Collection size (n)', gridcolor: gridColor },
+    yaxis: { title: yTitle, gridcolor: gridColor, rangemode: 'tozero' },
+    legend: {
+      bgcolor:     DARK ? 'rgba(28,31,46,0.92)' : 'rgba(255,255,255,0.85)',
+      bordercolor: DARK ? '#3a4470' : '#ddd',
+      borderwidth: 1, font: { color: fontColor }
+    },
     paper_bgcolor: bgColor, plot_bgcolor: bgColor, hovermode: 'x unified'
   }, { responsive: true, displayModeBar: false, staticPlot: TOUCH });
 
@@ -678,13 +725,15 @@ function buildPctChart(containerId, groupId, sec) {
   var maxP  = Math.max.apply(null, [150].concat(valid));
 
   var dotColors = pcts.map(function(p) {
-    if (p === null) return '#ccc';
+    if (p === null) return DARK ? '#445' : '#ccc';
     return isRuntime
       ? (p > 103 ? '#2e7d32' : p < 97 ? '#c62828' : '#888')
       : (p < 97  ? '#2e7d32' : p > 103 ? '#c62828' : '#888');
   });
 
-  var bgColor = isRuntime ? 'white' : '#fdfbff';
+  var bgColor   = DARK ? (isRuntime ? '#1c1f2e' : '#1c1829') : (isRuntime ? 'white' : '#fdfbff');
+  var gridColor = DARK ? '#2a2f45' : '#ebebeb';
+  var fontColor = DARK ? '#dde1f0' : '#333';
 
   // Green = good side of 100%, red = bad side (reversed for memory).
   var yLo = minP - 5, yHi = maxP + 10;
@@ -692,31 +741,29 @@ function buildPctChart(containerId, groupId, sec) {
     { type: 'rect', xref: 'paper', yref: 'y', layer: 'below', line: { width: 0 },
       x0: 0, x1: 1,
       y0: isRuntime ? 100 : yLo, y1: isRuntime ? yHi : 100,
-      fillcolor: 'rgba(46,125,50,0.10)' },
+      fillcolor: DARK ? 'rgba(46,125,50,0.20)' : 'rgba(46,125,50,0.10)' },
     { type: 'rect', xref: 'paper', yref: 'y', layer: 'below', line: { width: 0 },
       x0: 0, x1: 1,
       y0: isRuntime ? yLo : 100, y1: isRuntime ? 100 : yHi,
-      fillcolor: 'rgba(198,40,40,0.08)' }
+      fillcolor: DARK ? 'rgba(198,40,40,0.15)' : 'rgba(198,40,40,0.08)' }
   ];
 
   Plotly.newPlot(el, [
     { x: [plotN[0], plotN[plotN.length - 1]], y: [100, 100],
       type: 'scatter', mode: 'lines',
-      line: { dash: 'dot', color: '#888', width: 1.5 },
+      line: { dash: 'dot', color: DARK ? '#667090' : '#888', width: 1.5 },
       showlegend: false, hoverinfo: 'skip' },
     { x: plotN, y: pcts,
       type: 'scatter', mode: 'lines+markers',
       name: sec.primary + ' vs ' + sec.baseline,
-      line: { color: '#555', width: 1.5 },
+      line: { color: DARK ? '#aab0cc' : '#555', width: 1.5 },
       marker: { size: 6, color: dotColors },
       hovertemplate: '%{y:.1f}%<br>n=%{x}<extra></extra>' }
   ], {
     margin: { t: 8, r: 16, b: 40, l: 50 },
-    xaxis: { gridcolor: '#ebebeb' },
-    yaxis: {
-      gridcolor: '#ebebeb', zeroline: false,
-      range: [yLo, yHi], ticksuffix: '%'
-    },
+    font: { color: fontColor },
+    xaxis: { gridcolor: gridColor },
+    yaxis: { gridcolor: gridColor, zeroline: false, range: [yLo, yHi], ticksuffix: '%' },
     shapes: shapes,
     paper_bgcolor: bgColor, plot_bgcolor: bgColor,
     showlegend: false, hovermode: 'x'
