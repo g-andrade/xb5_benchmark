@@ -179,8 +179,24 @@ Xb5Benchmark.run("output/my_run", keywords: [:union, :intersection])
 Xb5Benchmark.merge_into_single_json("output/my_run")
 ```
 
-A full run takes several hours. Results land in `output/my_run/` as JSON files and two
-pivoted CSV files (`stats_runtime.csv`, `stats_memory.csv`).
+A full run takes about an hour. Results land in `output/my_run/` as JSON files
+and two pivoted CSV files (`stats_runtime.csv`, `stats_memory.csv`).
+
+### Reducing measurement noise
+
+On CPUs with aggressive boost clocks, occasional frequency drops can pull p25 well below the
+median. To reduce this:
+
+```bash
+# Disable frequency scaling (revert with: cpupower frequency-set -g schedutil)
+sudo cpupower frequency-set -g performance
+
+# Pin to a single logical CPU
+taskset -c 2 iex -S mix
+```
+
+Avoid CPU 0 (higher OS interrupt activity). If SMT/HT is active, pin to one sibling per
+physical core; check pairs via `/sys/devices/system/cpu/cpuN/topology/thread_siblings_list`.
 
 ### Generating the HTML report
 
