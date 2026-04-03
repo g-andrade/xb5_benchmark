@@ -194,6 +194,12 @@ body {
 .chart-box { width: 100%; height: 400px; }
 .pct-box   { width: 100%; height: 220px; }
 .no-data { color: #aaa; font-style: italic; padding: 16px 0; }
+.noscript-msg {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 80vh; color: #555; text-align: center; padding: 40px;
+}
+.noscript-msg h2 { font-size: 20px; margin-bottom: 8px; color: #222; }
+.noscript-msg p  { font-size: 14px; color: #777; }
 </style>
 </head>
 <body>
@@ -220,6 +226,14 @@ body {
 </div>
 
 <main id="main"></main>
+
+<noscript>
+  <style>#header { display: none; }</style>
+  <div class="noscript-msg">
+    <h2>JavaScript is required</h2>
+    <p>This report is an interactive application and cannot be displayed without JavaScript.</p>
+  </div>
+</noscript>
 
 <script>
 // ============================================================
@@ -972,7 +986,6 @@ function init() {
   var si = DATA.system_info;
   document.getElementById('sysinfo').textContent =
     [si.os, 'Erlang ' + si.erlang, 'Elixir ' + si.elixir,
-     si.num_cores + ' cores', si.available_memory,
      si['jit_enabled?'] ? 'JIT \u2713' : 'JIT \u2717'].join(' \u00b7 ');
 
   var fromHash = hashToState(location.hash);
