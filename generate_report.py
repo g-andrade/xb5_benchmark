@@ -123,6 +123,8 @@ body {
   #sysinfo { display: none; }
   .hdr-ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
   .hdr-ctrls select { max-width: 100%; width: 100%; }
+  #main { padding-left: 0; padding-right: 0; }
+  .detail-card { padding-left: 0; padding-right: 0; border-radius: 0; box-shadow: none; }
 }
 /* ---- Overview ---- */
 .ov-header { font-size: 12px; color: #888; margin-bottom: 10px; }
@@ -568,6 +570,8 @@ function ratioHtml(ratio) {
 // Chart helpers
 // ============================================================
 
+var TOUCH = window.matchMedia('(pointer: coarse)').matches;
+
 var activePlots = [];
 
 function purgeCharts() {
@@ -601,7 +605,7 @@ function buildMainChart(containerId, groupId, sec) {
     var medians = plotN.map(function(n) { return getValAt(entry.measurements, n, 'median'); });
     var p25s    = plotN.map(function(n) { return getValAt(entry.measurements, n, 'p25'); });
     var p75s    = plotN.map(function(n) { return getValAt(entry.measurements, n, 'p75'); });
-    var label   = entry.impl_description || entry.impl_mod;
+    var label   = TOUCH ? entry.impl_mod : (entry.impl_description || entry.impl_mod);
     var dash    = isRuntime ? 'solid' : 'dash';
 
     traces.push({
@@ -629,7 +633,7 @@ function buildMainChart(containerId, groupId, sec) {
     yaxis: { title: yTitle, gridcolor: '#ebebeb', rangemode: 'tozero' },
     legend: { bgcolor: 'rgba(255,255,255,0.85)', bordercolor: '#ddd', borderwidth: 1 },
     paper_bgcolor: bgColor, plot_bgcolor: bgColor, hovermode: 'x unified'
-  }, { responsive: true, displayModeBar: false });
+  }, { responsive: true, displayModeBar: false, staticPlot: TOUCH });
 
   activePlots.push(containerId);
 }
@@ -702,7 +706,7 @@ function buildPctChart(containerId, groupId, sec) {
     shapes: shapes,
     paper_bgcolor: bgColor, plot_bgcolor: bgColor,
     showlegend: false, hovermode: 'x'
-  }, { responsive: true, displayModeBar: false });
+  }, { responsive: true, displayModeBar: false, staticPlot: TOUCH });
 
   activePlots.push(containerId);
 }
