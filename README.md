@@ -8,7 +8,7 @@ Compares `xb5_sets`, `xb5_trees`, and `xb5_bag` against OTP's `gb_sets` and `gb_
 
 Two pre-run HTML reports are available online:
 
-- [AMD Ryzen 7 5700G — OTP 28.1.1, JIT enabled](https://www.gandrade.net/xb5_benchmark/report_amd_ryzen7_5700g.html)
+- [AMD Ryzen 7 5700G — OTP 28.4.1, JIT enabled](https://www.gandrade.net/xb5_benchmark/report_amd_ryzen7_5700g.html)
 - [Intel i5-3550 — OTP 28.3.1, JIT enabled](https://www.gandrade.net/xb5_benchmark/report_intel_i5_3550.html)
 
 Each report is interactive: you can select build type, metric (runtime / heap allocation),
@@ -31,6 +31,12 @@ Three comparisons are made:
 Each operation is measured at `n = 0, 100, 200, 300, …, 1000, 2000, …, 10000, 15000` elements
 (21 sizes).
 
+### Key type
+
+All keys are signed integers in the range [−2⁵⁹, 2⁵⁹ − 1]. On 64-bit systems, the BEAM VM
+represents these as small integers — immediate values requiring no heap allocation. This keeps
+the benchmarks focused on tree-structure costs rather than key comparison overhead.
+
 ### Build types
 
 | Build type | Description |
@@ -38,7 +44,6 @@ Each operation is measured at `n = 0, 100, 200, 300, …, 1000, 2000, …, 10000
 | `sequential` | Keys inserted one at a time in sorted order |
 | `random` | Random insertion order (50 independent variants per size, averaged) |
 | `from_ordset_or_orddict` | Bulk construction from a pre-sorted list (tests optimised paths) |
-| `xb5_adversarial` | Insert 25% extra keys, then delete every 4th (lowers key density, putting xb5 at a potential disadvantage) |
 
 ### Metrics
 
@@ -59,7 +64,7 @@ Tests ran on OTP 28 with JIT enabled on two machines:
 
 | Machine | CPU | OTP | RAM |
 |---|---|---|---|
-| AMD Ryzen 7 5700G | 16-thread desktop APU | 28.1.1 | 30.7 GB |
+| AMD Ryzen 7 5700G | 16-thread desktop APU | 28.4.1 | 30.7 GB |
 | Intel i5-3550 | 4-core 2012 desktop | 28.3.1 | 19.2 GB |
 
 ## Benchmark design
@@ -88,7 +93,7 @@ code. This is achieved in two layers:
    Overhead is further minimised in the hot path in two ways. First, multi-key operations
    (e.g. "add 300 keys") are implemented as direct tail-recursive functions that
    pattern-match on `[key | rest]` lists, avoiding any higher-order dispatch through
-   `:lists.foreach/2` or `:lists.foldl/3`. Second, collection variants are consumed the
+   `Enum.each/2` or `Enum.reduce/3`. Second, collection variants are consumed the
    same way — the `run_each_*` functions iterate through the pre-built variant list with
    head-tail pattern matching rather than `Enum` calls.
 

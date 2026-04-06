@@ -106,9 +106,12 @@ body {
   background: #1c2233; color: #e8eaf6;
   padding: 10px 20px 8px;
 }
-.hdr-top { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
+.hdr-top { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+.hdr-top-left { display: flex; align-items: baseline; gap: 16px; flex: 1; }
 #hdr-title { font-size: 15px; font-weight: 700; color: #fff; }
 #sysinfo   { font-size: 11px; color: #9fa8da; }
+#gh-link { color: #9fa8da; display: flex; align-items: center; flex-shrink: 0; }
+#gh-link:hover { color: #fff; }
 .hdr-ctrls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .hdr-ctrls .cg { display: flex; align-items: center; gap: 5px; }
 .hdr-ctrls label { font-size: 11px; color: #c5cae9; white-space: nowrap; }
@@ -117,6 +120,16 @@ body {
   background: #2a3250; color: #e8eaf6; border: 1px solid #3a4470;
   max-width: 260px;
 }
+/* ---- Footer ---- */
+#footer {
+  padding: 16px 24px; background: #f0f2f5;
+  border-top: 1px solid #e0e2ea;
+}
+#footer-gh-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: #888; text-decoration: none;
+}
+#footer-gh-link:hover { color: #1c2233; }
 /* ---- Main ---- */
 #main { padding: 20px 24px; background: #f0f2f5; }
 @media (max-width: 600px) {
@@ -230,6 +243,9 @@ body {
   .noscript-msg { color: #8892b0; }
   .noscript-msg h2 { color: #dde1f0; }
   .noscript-msg p { color: #8892b0; }
+  #footer { background: #111318; border-top-color: #1e2133; }
+  #footer-gh-link { color: #556080; }
+  #footer-gh-link:hover { color: #dde1f0; }
 }
 </style>
 </head>
@@ -239,8 +255,22 @@ body {
 
 <div id="header">
   <div class="hdr-top">
-    <h1 id="hdr-title">xb5 Benchmark</h1>
-    <div id="sysinfo"></div>
+    <a id="gh-link" href="https://github.com/g-andrade/xb5" title="xb5 on GitHub">
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+          0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+          -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+          .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+          -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27
+          c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+          .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+          0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+    </a>
+    <div class="hdr-top-left">
+      <h1 id="hdr-title">xb5 Benchmark</h1>
+      <div id="sysinfo"></div>
+    </div>
   </div>
   <div class="hdr-ctrls">
     <div class="cg"><label>Section</label><select id="sel-section"></select></div>
@@ -1053,6 +1083,22 @@ function init() {
 
 init();
 </script>
+
+<footer id="footer">
+  <a href="https://github.com/g-andrade/xb5" id="footer-gh-link">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+        0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+        -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+        .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+        -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.67 7.67 0 0 1 2-.27
+        c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+        .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+        0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    g-andrade/xb5
+  </a>
+</footer>
 </body>
 </html>"""
 

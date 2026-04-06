@@ -83,7 +83,7 @@ There are no Mix tasks or test suite — benchmarks are run interactively via IE
 - `:sequential` — Keys inserted in sorted order
 - `:random` — Random insertion order (50 variants per size for statistical robustness)
 - `:from_ordset_or_orddict` — Pre-sorted keys (tests optimized bulk construction paths)
-- `:xb5_adversarial` — Insert 25% extra keys, then delete every 4th (stresses xb5 internal structure)
+- `:xb5_adversarial` — Insert 25% extra keys, then delete every 4th (stresses xb5 internal structure). **Currently inactive** — commented out of `all_build_types/0` in `InputStructures` as it was not distinct enough to be worth the extra run time.
 
 ### Output Structure
 
