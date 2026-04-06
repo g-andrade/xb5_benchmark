@@ -200,8 +200,7 @@ sudo cpupower frequency-set -g performance
 taskset -c 2 iex -S mix
 ```
 
-Avoid CPU 0 (higher OS interrupt activity). If SMT/HT is active, pin to one sibling per
-physical core; check pairs via `/sys/devices/system/cpu/cpuN/topology/thread_siblings_list`.
+Avoid CPU 0 (higher OS interrupt activity).
 
 ### Generating the HTML report
 
