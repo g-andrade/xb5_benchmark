@@ -2,7 +2,7 @@
 
 Elixir benchmarking suite for the [`xb5`](https://github.com/g-andrade/xb5) Erlang library.
 Compares `xb5_sets`, `xb5_trees`, and `xb5_bag` against OTP's `gb_sets` and `gb_trees` across
-50+ operations, 4 build scenarios, and collection sizes from 0 to 15,000 elements.
+50+ operations, 3 build scenarios, and collection sizes from 0 to 15,000 elements.
 
 ## Published reports
 
