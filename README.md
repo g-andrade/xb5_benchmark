@@ -147,7 +147,7 @@ the baseline; heap differences are percentages relative to the baseline.
 
 ### `xb5_trees` vs `gb_trees`
 
-* Lookups (`get`, `lookup`, `is_defined`): **1.6–1.9× as fast**, with equal heap
+* Lookups (`get`, `lookup`, `is_defined`): **1.1–1.9× as fast**, with equal heap
 * Mutations (`enter`, `insert`, `update`, `delete`, `take`): **1.2–1.7× as fast**
 * `map`, `keys`, `values`: **1.9–2.5× as fast**; `map` uses ~47% less heap
 * Alternating `take_smallest`/`insert_largest` (queue-like workload):
@@ -157,7 +157,7 @@ the baseline; heap differences are percentages relative to the baseline.
 ### `xb5_bag` vs `gb_sets`
 
 Runtime profile broadly matches `xb5_sets`. Heap use is up to ~40% lower for `filter`/`map`
-operations and ~15–62% lower for bulk construction, but ~20–25% higher for mutations.
+operations and ~15–62% lower for bulk construction, but ~20–40% higher for mutations.
 
 ## Running the benchmarks yourself
 
